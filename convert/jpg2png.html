@@ -4,47 +4,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JPG to PNG Converter</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1f2937;
+            margin: 0 0 24px 0;
+            font-size: 24px;
+        }
+
+        .drop-zone {
+            border: 2px dashed #e5e7eb;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f9fafb;
+        }
+
+        .drop-zone:hover {
+            border-color: #60a5fa;
+            background: #eff6ff;
+        }
+
+        .drop-zone p {
+            margin: 8px 0 0 0;
+            color: #6b7280;
+        }
+
+        .drop-zone .icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto;
+            color: #9ca3af;
+        }
+
+        img#preview {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 24px;
+            display: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen flex items-center justify-center p-8">
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <h1 class="text-3xl font-semibold text-gray-800 mb-8 text-center">Convert JPG to PNG</h1>
+<body>
+    <div class="container">
+        <h1>Convert JPG to PNG</h1>
         
-        <div id="drop-zone" 
-             class="group relative border-2 border-dashed border-gray-200 rounded-xl 
-                    bg-gray-50 p-12 text-center cursor-pointer transition-all duration-300
-                    hover:border-green-400 hover:bg-green-50">
-            <div class="space-y-4">
-                <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-green-100">
-                    <svg class="w-8 h-8 text-gray-400 group-hover:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-gray-600 font-medium">Drop your JPG file here</p>
-                    <p class="text-sm text-gray-400 mt-1">or click to browse</p>
-                </div>
-            </div>
-            <input type="file" id="fileInput" accept="image/jpeg" class="hidden">
+        <div id="drop-zone" class="drop-zone">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            <p>Drop your JPG here or click to browse</p>
+            <input type="file" id="fileInput" accept="image/jpeg" style="display: none">
         </div>
 
-        <div class="mt-8 space-y-6">
-            <div class="relative">
-                <img id="preview" 
-                     class="max-w-full rounded-xl shadow-lg hidden mx-auto" 
-                     alt="Preview">
-            </div>
-            
-            <button id="downloadBtn"
-                    disabled
-                    class="w-full py-3 px-6 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl 
-                           font-medium shadow-lg shadow-green-500/30 opacity-90 hover:opacity-100
-                           disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none
-                           focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
-                           transition-all duration-300">
-                Download PNG
-            </button>
-        </div>
+        <img id="preview" alt="Preview">
+        <button id="downloadBtn" disabled>Download PNG</button>
     </div>
 
     <script>
@@ -53,22 +112,29 @@
         const preview = document.getElementById('preview');
         const downloadBtn = document.getElementById('downloadBtn');
 
+        // Handle click to upload
         dropZone.addEventListener('click', () => fileInput.click());
+
+        // Handle file selection
         fileInput.addEventListener('change', handleFile);
 
+        // Handle drag and drop
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            dropZone.classList.add('border-green-400', 'bg-green-50');
+            dropZone.style.borderColor = '#60a5fa';
+            dropZone.style.background = '#eff6ff';
         });
 
         dropZone.addEventListener('dragleave', (e) => {
             e.preventDefault();
-            dropZone.classList.remove('border-green-400', 'bg-green-50');
+            dropZone.style.borderColor = '#e5e7eb';
+            dropZone.style.background = '#f9fafb';
         });
 
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            dropZone.classList.remove('border-green-400', 'bg-green-50');
+            dropZone.style.borderColor = '#e5e7eb';
+            dropZone.style.background = '#f9fafb';
             const file = e.dataTransfer.files[0];
             if (file && file.type === 'image/jpeg') {
                 handleFile({ target: { files: [file] } });
@@ -83,7 +149,7 @@
                     const img = new Image();
                     img.onload = () => {
                         preview.src = e.target.result;
-                        preview.classList.remove('hidden');
+                        preview.style.display = 'block';
                         downloadBtn.disabled = false;
                     };
                     img.src = e.target.result;
@@ -100,13 +166,14 @@
             canvas.height = preview.naturalHeight;
             ctx.drawImage(preview, 0, 0);
             
-            // Convert to PNG
-            const pngUrl = canvas.toDataURL('image/png');
-            
-            const link = document.createElement('a');
-            link.href = pngUrl;
-            link.download = 'converted.png';
-            link.click();
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'converted.png';
+                link.click();
+                URL.revokeObjectURL(url);
+            }, 'image/png');
         });
     </script>
 </body>
