@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP4 to WAV Converter</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1f2937;
+            margin: 0 0 24px 0;
+            font-size: 24px;
+        }
+
+        .drop-zone {
+            border: 2px dashed #e5e7eb;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f9fafb;
+        }
+
+        .drop-zone:hover {
+            border-color: #60a5fa;
+            background: #eff6ff;
+        }
+
+        .drop-zone p {
+            margin: 8px 0 0 0;
+            color: #6b7280;
+        }
+
+        .drop-zone .icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto;
+            color: #9ca3af;
+        }
+
+        .preview-container {
+            margin-top: 24px;
+            display: none;
+        }
+
+        .preview-container audio {
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .file-info {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #4b5563;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .progress {
+            display: none;
+            margin-top: 16px;
+            text-align: center;
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Convert MP4 to WAV</h1>
+        
+        <div id="drop-zone" class="drop-zone">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            <p>Drop your MP4 file here or click to browse</p>
+            <input type="file" id="fileInput" accept="video/mp4" style="display: none">
+        </div>
+
+        <div id="previewContainer" class="preview-container">
+            <div id="fileInfo" class="file-info"></div>
+            <audio id="preview" controls></audio>
+            <button id="downloadBtn" disabled>Convert to WAV</button>
+        </div>
+
+        <div id="progress" class="progress">
+            Converting... Please wait.
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const previewContainer = document.getElementById('previewContainer');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const fileInfo = document.getElementById('fileInfo');
+        const progress = document.getElementById('progress');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFile);
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#60a5fa';
+            dropZone.style.background = '#eff6ff';
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#e5e7eb';
+            dropZone.style.background = '#f9fafb';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#e5e7eb';
+            dropZone.style.background = '#f9fafb';
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'video/mp4') {
+                handleFile({ target: { files: [file] } });
+            }
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (file && file.type === 'video/mp4') {
+                const video = document.createElement('video');
+                const fileURL = URL.createObjectURL(file);
+                
+                video.src = fileURL;
+                video.onloadedmetadata = () => {
+                    const duration = Math.round(video.duration);
+                    const minutes = Math.floor(duration / 60);
+                    const seconds = duration % 60;
+                    
+                    fileInfo.innerHTML = `
+                        File: ${file.name}<br>
+                        Size: ${formatFileSize(file.size)}<br>
+                        Duration: ${minutes}:${seconds.toString().padStart(2, '0')}
+                    `;
+                    
+                    preview.src = fileURL;
+                    previewContainer.style.display = 'block';
+                    downloadBtn.disabled = false;
+                };
+            }
+        }
+
+        downloadBtn.addEventListener('click', async () => {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const response = await fetch(preview.src);
+            const arrayBuffer = await response.arrayBuffer();
+            
+            progress.style.display = 'block';
+            downloadBtn.disabled = true;
+
+            audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+                // Convert to WAV
+                const wavBuffer = audioBufferToWav(audioBuffer);
+                const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+                
+                // Download
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'converted.wav';
+                link.click();
+                
+                URL.revokeObjectURL(url);
+                progress.style.display = 'none';
+                downloadBtn.disabled = false;
+            });
+        });
+
+        // WAV encoder function
+        function audioBufferToWav(buffer) {
+            const numOfChan = buffer.numberOfChannels;
+            const length = buffer.length * numOfChan * 2;
+            const buffer2 = new ArrayBuffer(44 + length);
+            const view = new DataView(buffer2);
+            const channels = [];
+            let sample;
+            let offset = 0;
+            let pos = 0;
+
+            // Write WAV header
+            setUint32(0x46464952);                         // "RIFF"
+            setUint32(36 + length);                        // file length
+            setUint32(0x45564157);                         // "WAVE"
+            setUint32(0x20746d66);                         // "fmt " chunk
+            setUint32(16);                                 // length = 16
+            setUint16(1);                                  // PCM (uncompressed)
+            setUint16(numOfChan);
+            setUint32(buffer.sampleRate);
+            setUint32(buffer.sampleRate * 2 * numOfChan);  // avg. bytes/sec
+            setUint16(numOfChan * 2);                      // block-align
+            setUint16(16);                                 // 16-bit
+            setUint32(0x61746164);                         // "data" - chunk
+            setUint32(length);                             // chunk length
+
+            // Write interleaved data
+            for(let i = 0; i < buffer.numberOfChannels; i++)
+                channels.push(buffer.getChannelData(i));
+
+            while(pos < buffer.length) {
+                for(let i = 0; i < numOfChan; i++) {
+                    sample = Math.max(-1, Math.min(1, channels[i][pos]));
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
+                    view.setInt16(44 + offset, sample, true); offset += 2;
+                }
+                pos++;
+            }
+
+            return buffer2;
+
+            function setUint16(data) {
+                view.setUint16(pos, data, true);
+                pos += 2;
+            }
+
+            function setUint32(data) {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            }
+        }
+    </script>
+</body>
+</html>
