@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP3 to WAV Converter</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen flex items-center justify-center p-8">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-8 text-center">Convert MP3 to WAV</h1>
+        
+        <div id="drop-zone" 
+             class="group relative border-2 border-dashed border-gray-200 rounded-xl 
+                    bg-gray-50 p-12 text-center cursor-pointer transition-all duration-300
+                    hover:border-blue-400 hover:bg-blue-50">
+            <div class="space-y-4">
+                <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-blue-100">
+                    <svg class="w-8 h-8 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-gray-600 font-medium">Drop your MP3 file here</p>
+                    <p class="text-sm text-gray-400 mt-1">or click to browse</p>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept="audio/mp3" class="hidden">
+        </div>
+
+        <div class="mt-8 space-y-6">
+            <div class="relative">
+                <audio id="preview" 
+                       class="w-full rounded-xl shadow-lg hidden" 
+                       controls>
+                </audio>
+            </div>
+            
+            <button id="downloadBtn"
+                    disabled
+                    class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl 
+                           font-medium shadow-lg shadow-blue-500/30 opacity-90 hover:opacity-100
+                           disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                           transition-all duration-300">
+                Download WAV
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFile);
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-400', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'audio/mp3') {
+                handleFile({ target: { files: [file] } });
+            }
+        });
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (file && file.type === 'audio/mp3') {
+                const fileURL = URL.createObjectURL(file);
+                preview.src = fileURL;
+                preview.classList.remove('hidden');
+                downloadBtn.disabled = false;
+            }
+        }
+
+        downloadBtn.addEventListener('click', async () => {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const response = await fetch(preview.src);
+            const arrayBuffer = await response.arrayBuffer();
+            
+            downloadBtn.textContent = 'Converting...';
+            downloadBtn.disabled = true;
+
+            audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+                const wavBuffer = audioBufferToWav(audioBuffer);
+                const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+                
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'converted.wav';
+                link.click();
+                
+                URL.revokeObjectURL(url);
+                downloadBtn.textContent = 'Download WAV';
+                downloadBtn.disabled = false;
+            });
+        });
+
+        function audioBufferToWav(buffer) {
+            const numOfChan = buffer.numberOfChannels;
+            const length = buffer.length * numOfChan * 2;
+            const buffer2 = new ArrayBuffer(44 + length);
+            const view = new DataView(buffer2);
+            const channels = [];
+            let sample;
+            let offset = 0;
+            let pos = 0;
+
+            setUint32(0x46464952);                         
+            setUint32(36 + length);                        
+            setUint32(0x45564157);                         
+            setUint32(0x20746d66);                         
+            setUint32(16);                                 
+            setUint16(1);                                  
+            setUint16(numOfChan);
+            setUint32(buffer.sampleRate);
+            setUint32(buffer.sampleRate * 2 * numOfChan);  
+            setUint16(numOfChan * 2);                      
+            setUint16(16);                                 
+            setUint32(0x61746164);                         
+            setUint32(length);                             
+
+            for(let i = 0; i < buffer.numberOfChannels; i++)
+                channels.push(buffer.getChannelData(i));
+
+            while(pos < buffer.length) {
+                for(let i = 0; i < numOfChan; i++) {
+                    sample = Math.max(-1, Math.min(1, channels[i][pos]));
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
+                    view.setInt16(44 + offset, sample, true); offset += 2;
+                }
+                pos++;
+            }
+
+            return buffer2;
+
+            function setUint16(data) {
+                view.setUint16(pos, data, true);
+                pos += 2;
+            }
+
+            function setUint32(data) {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            }
+        }
+    </script>
+</body>
+</html>

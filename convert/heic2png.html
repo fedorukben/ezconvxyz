@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEIC to PNG Converter</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen flex items-center justify-center p-8">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-8 text-center">Convert HEIC to PNG</h1>
+        
+        <div id="drop-zone" 
+             class="group relative border-2 border-dashed border-gray-200 rounded-xl 
+                    bg-gray-50 p-12 text-center cursor-pointer transition-all duration-300
+                    hover:border-blue-400 hover:bg-blue-50">
+            <div class="space-y-4">
+                <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-blue-100">
+                    <svg class="w-8 h-8 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-gray-600 font-medium">Drop your HEIC file here</p>
+                    <p class="text-sm text-gray-400 mt-1">or click to browse</p>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept=".heic,.heif" class="hidden">
+        </div>
+
+        <div class="mt-8 space-y-6">
+            <div class="relative">
+                <img id="preview" 
+                     class="max-w-full rounded-xl shadow-lg hidden mx-auto" 
+                     alt="Preview">
+            </div>
+            
+            <button id="downloadBtn"
+                    disabled
+                    class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl 
+                           font-medium shadow-lg shadow-blue-500/30 opacity-90 hover:opacity-100
+                           disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                           transition-all duration-300">
+                Download PNG
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js"></script>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFile);
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-400', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            const file = e.dataTransfer.files[0];
+            if (file && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif'))) {
+                handleFile({ target: { files: [file] } });
+            }
+        });
+
+        async function handleFile(e) {
+            const file = e.target.files[0];
+            if (file && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif'))) {
+                try {
+                    downloadBtn.textContent = 'Converting...';
+                    downloadBtn.disabled = true;
+                    
+                    const pngBlob = await heic2any({
+                        blob: file,
+                        toType: "image/png"
+                    });
+                    
+                    const url = URL.createObjectURL(pngBlob);
+                    preview.src = url;
+                    preview.classList.remove('hidden');
+                    
+                    downloadBtn.textContent = 'Download PNG';
+                    downloadBtn.disabled = false;
+                    
+                    // Store the converted blob for download
+                    downloadBtn.convertedBlob = pngBlob;
+                    
+                } catch (error) {
+                    console.error('Error converting HEIC:', error);
+                    alert('Error converting file. Please try another HEIC file.');
+                    downloadBtn.textContent = 'Download PNG';
+                    downloadBtn.disabled = true;
+                }
+            }
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            if (downloadBtn.convertedBlob) {
+                const url = URL.createObjectURL(downloadBtn.convertedBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'converted.png';
+                link.click();
+                URL.revokeObjectURL(url);
+            }
+        });
+    </script>
+</body>
+</html>
