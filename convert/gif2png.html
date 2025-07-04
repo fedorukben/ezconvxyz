@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIF to PNG Converter</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen flex items-center justify-center p-8">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-4 text-center">Convert GIF to PNG</h1>
+        <p class="text-center text-gray-500 mb-8">Extracts the first frame from your GIF</p>
+        
+        <div id="drop-zone" 
+             class="group relative border-2 border-dashed border-gray-200 rounded-xl 
+                    bg-gray-50 p-12 text-center cursor-pointer transition-all duration-300
+                    hover:border-blue-400 hover:bg-blue-50">
+            <div class="space-y-4">
+                <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-blue-100">
+                    <svg class="w-8 h-8 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-gray-600 font-medium">Drop your GIF file here</p>
+                    <p class="text-sm text-gray-400 mt-1">or click to browse</p>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept="image/gif" class="hidden">
+        </div>
+
+        <div class="mt-8 space-y-6">
+            <div class="relative">
+                <img id="preview" 
+                     class="max-w-full rounded-xl shadow-lg hidden mx-auto" 
+                     alt="Preview">
+            </div>
+            
+            <div id="fileInfo" class="hidden bg-gray-50 p-4 rounded-xl text-sm text-gray-600">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <span class="font-medium">Size:</span>
+                        <span id="fileSize"></span>
+                    </div>
+                    <div>
+                        <span class="font-medium">Dimensions:</span>
+                        <span id="fileDimensions"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="downloadBtn"
+                    disabled
+                    class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl 
+                           font-medium shadow-lg shadow-blue-500/30 opacity-90 hover:opacity-100
+                           disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                           transition-all duration-300">
+                Download PNG
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileSize = document.getElementById('fileSize');
+        const fileDimensions = document.getElementById('fileDimensions');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFile);
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-400', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'image/gif') {
+                handleFile({ target: { files: [file] } });
+            }
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (file && file.type === 'image/gif') {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        preview.src = e.target.result;
+                        preview.classList.remove('hidden');
+                        
+                        // Show file information
+                        fileSize.textContent = formatFileSize(file.size);
+                        fileDimensions.textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
+                        fileInfo.classList.remove('hidden');
+                        
+                        downloadBtn.disabled = false;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            // Create a canvas to capture the first frame
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size to match the image
+            canvas.width = preview.naturalWidth;
+            canvas.height = preview.naturalHeight;
+            
+            // Draw the image (this will capture the first frame of the GIF)
+            ctx.drawImage(preview, 0, 0);
+            
+            // Convert to PNG and download
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'converted-first-frame.png';
+                link.click();
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        });
+    </script>
+</body>
+</html>
