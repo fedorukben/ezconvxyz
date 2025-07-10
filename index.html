@@ -76,12 +76,11 @@
 
         <!-- Image Tools Section -->
         <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Image Tools</h2>
-            <p class="text-gray-600">Edit and enhance your images</p>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">File Tools</h2>
         </div>
 
         <!-- Tools Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <!-- Circle Crop Tool -->
             <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer" onclick="window.location.href='circle-crop.html'">
                 <div class="flex flex-col items-center text-center">
@@ -120,6 +119,50 @@
                     <p class="text-sm text-gray-600">Remove backgrounds from images</p>
                 </div>
             </div>
+
+            <!-- QR Code Generator Tool -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer" onclick="window.location.href='qr-generator.html'">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-20 h-20 bg-blue-500 rounded-2xl flex items-center justify-center mb-4">
+                        <!-- QR Code pattern -->
+                        <svg class="w-12 h-12" viewBox="0 0 48 48" fill="none">
+                            <!-- QR Code squares pattern -->
+                            <!-- Top left corner -->
+                            <rect x="4" y="4" width="16" height="16" stroke="white" stroke-width="2" fill="none"/>
+                            <rect x="7" y="7" width="10" height="10" fill="white"/>
+                            <rect x="10" y="10" width="4" height="4" fill="blue-500"/>
+                            
+                            <!-- Top right corner -->
+                            <rect x="28" y="4" width="16" height="16" stroke="white" stroke-width="2" fill="none"/>
+                            <rect x="31" y="7" width="10" height="10" fill="white"/>
+                            <rect x="34" y="10" width="4" height="4" fill="blue-500"/>
+                            
+                            <!-- Bottom left corner -->
+                            <rect x="4" y="28" width="16" height="16" stroke="white" stroke-width="2" fill="none"/>
+                            <rect x="7" y="31" width="10" height="10" fill="white"/>
+                            <rect x="10" y="34" width="4" height="4" fill="blue-500"/>
+                            
+                            <!-- Center pattern dots -->
+                            <rect x="22" y="10" width="2" height="2" fill="white"/>
+                            <rect x="26" y="10" width="2" height="2" fill="white"/>
+                            <rect x="22" y="14" width="2" height="2" fill="white"/>
+                            <rect x="26" y="14" width="2" height="2" fill="white"/>
+                            
+                            <rect x="28" y="22" width="2" height="2" fill="white"/>
+                            <rect x="32" y="22" width="2" height="2" fill="white"/>
+                            <rect x="36" y="22" width="2" height="2" fill="white"/>
+                            <rect x="40" y="22" width="2" height="2" fill="white"/>
+                            
+                            <rect x="22" y="28" width="2" height="2" fill="white"/>
+                            <rect x="26" y="28" width="2" height="2" fill="white"/>
+                            <rect x="22" y="32" width="2" height="2" fill="white"/>
+                            <rect x="26" y="32" width="2" height="2" fill="white"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">QR Code Generator</h3>
+                    <p class="text-sm text-gray-600">Generate QR codes from text</p>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -130,21 +173,13 @@
         const conversionNotes = document.getElementById('conversionNotes');
         const noteText = document.getElementById('noteText');
 
-        // Conversion notes for different combinations
+        // Conversion notes for potential issues only
         const conversionMessages = {
-            'png-gif': 'This will create a static (non-animated) GIF from your PNG image.',
-            'jpg-gif': 'This will create a static (non-animated) GIF from your JPG image.',
-            'webp-gif': 'This will create a static (non-animated) GIF from your WEBP image.',
-            'webp-heic': 'This will create a static (non-animated) GIF from your HEIC image.',
-            'png-jpg': 'Some image quality may be lost during conversion as JPG uses lossy compression. Transparency will be replaced with white background.',
-            'webp-jpg': 'Some image quality may be lost during conversion as JPG uses lossy compression. Transparency will be replaced with white background.',
-            'heic-jpg': 'Some image quality may be lost during conversion as JPG uses lossy compression.',
-            'jpg-png': 'Converting to PNG will preserve the current image quality but may increase file size.',
-            'gif-png': 'For animated GIFs, only the first frame will be converted.',
-            'gif-jpg': 'For animated GIFs, only the first frame will be converted.',
-            'gif-webp': 'For animated GIFs, only the first frame will be converted.',
-            'wav-mp3': 'Conversion may take time for large files due to MP3 encoding.',
-            'mp4-wav': 'For video MP4s, this will pull out only the audio.',
+            'png-jpg': 'Note: Some image quality may be lost as JPG uses lossy compression.',
+            'gif-png': 'Note: For animated GIFs, only the first frame will be converted.',
+            'gif-jpg': 'Note: For animated GIFs, only the first frame will be converted.',
+            'gif-webp': 'Note: For animated GIFs, only the first frame will be converted.',
+            'flac-mp3': 'Note: Browser FLAC support varies. May not work in all browsers.',
         };
 
         // Enable/disable convert button and show/hide notes based on selections
@@ -230,6 +265,9 @@
                     break;
                 case 'mp4-to-wav':
                     window.location.href = 'mp42wav.html';
+                    break;
+                case 'flac-to-mp3':
+                    window.location.href = 'flac2mp3.html';
                     break;
                 default:
                     alert('This converter is not available yet!');

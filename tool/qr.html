@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen flex items-center justify-center p-8">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-8 text-center">QR Code Generator</h1>
+        
+        <div class="space-y-6">
+            <!-- Text Input -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">Enter text or URL:</label>
+                <textarea id="textInput" 
+                          placeholder="Enter your text, URL, or any content..."
+                          class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 
+                                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                 resize-none h-24">
+                </textarea>
+            </div>
+
+            <!-- QR Code Preview -->
+            <div class="relative">
+                <div id="qrContainer" class="hidden bg-gray-50 rounded-xl p-6 text-center">
+                    <div id="qrcode" class="flex justify-center mb-4"></div>
+                </div>
+            </div>
+            
+            <!-- Generate Button -->
+            <button id="generateBtn"
+                    disabled
+                    class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl 
+                           font-medium shadow-lg shadow-blue-500/30 opacity-90 hover:opacity-100
+                           disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                           transition-all duration-300">
+                Generate QR Code
+            </button>
+
+            <!-- Download Button -->
+            <button id="downloadBtn"
+                    disabled
+                    class="w-full py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl 
+                           font-medium shadow-lg shadow-green-500/30 opacity-90 hover:opacity-100
+                           disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none
+                           focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                           transition-all duration-300">
+                Download PNG
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const qrContainer = document.getElementById('qrContainer');
+        const qrcode = document.getElementById('qrcode');
+
+        let currentQR = null;
+
+        // Enable/disable generate button based on input
+        textInput.addEventListener('input', () => {
+            const hasText = textInput.value.trim().length > 0;
+            generateBtn.disabled = !hasText;
+            
+            if (!hasText) {
+                qrContainer.classList.add('hidden');
+                downloadBtn.disabled = true;
+            }
+        });
+
+        // Generate QR code
+        generateBtn.addEventListener('click', () => {
+            const text = textInput.value.trim();
+            if (!text) return;
+
+            // Clear previous QR code
+            qrcode.innerHTML = '';
+
+            try {
+                // Create QR code
+                currentQR = new QRious({
+                    element: document.createElement('canvas'),
+                    value: text,
+                    size: 256,
+                    level: 'M'
+                });
+
+                // Add to container
+                qrcode.appendChild(currentQR.canvas);
+                qrContainer.classList.remove('hidden');
+                downloadBtn.disabled = false;
+
+            } catch (error) {
+                alert('Error generating QR code. Please try with different text.');
+                console.error('QR generation error:', error);
+            }
+        });
+
+        // Download QR code
+        downloadBtn.addEventListener('click', () => {
+            if (!currentQR) return;
+
+            currentQR.canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'qrcode.png';
+                link.click();
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        });
+
+        // Allow Enter key to generate (Shift+Enter for new line)
+        textInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!generateBtn.disabled) {
+                    generateBtn.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
