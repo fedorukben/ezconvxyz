@@ -82,7 +82,7 @@
         <!-- Tools Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <!-- Circle Crop Tool -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer" onclick="window.location.href='circle-crop.html'">
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer" onclick="window.location.href='tool/circle-crop.html'">
                 <div class="flex flex-col items-center text-center">
                     <div class="w-20 h-20 bg-blue-500 rounded-2xl flex items-center justify-center mb-4 relative">
                         <!-- Square with circle cutout -->
@@ -102,7 +102,7 @@
             </div>
 
             <!-- Background Remover Tool -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer" onclick="window.location.href='background-remover.html'">
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer" onclick="window.location.href='tool/background-remover.html'">
                 <div class="flex flex-col items-center text-center">
                     <div class="w-20 h-20 bg-blue-500 rounded-2xl flex items-center justify-center mb-4">
                         <!-- Person silhouette with background -->
@@ -210,64 +210,64 @@
             const conversion = `${fromType.value}-to-${toType.value}`;
             switch (conversion) {
                 case 'png-to-jpg':
-                    window.location.href = 'png2jpg.html';
+                    window.location.href = 'convert/png2jpg.html';
                     break;
                 case 'png-to-webp':
-                    window.location.href = 'png2webp.html';
+                    window.location.href = 'convert/png2webp.html';
                     break;
                 case 'png-to-gif':
-                    window.location.href = 'png2gif.html';
+                    window.location.href = 'convert/png2gif.html';
                     break;
                 case 'jpg-to-png':
-                    window.location.href = 'jpg2png.html';
+                    window.location.href = 'convert/jpg2png.html';
                     break;
                 case 'jpg-to-webp':
-                    window.location.href = 'jpg2webp.html';
+                    window.location.href = 'convert/jpg2webp.html';
                     break;
                 case 'jpg-to-gif':
-                    window.location.href = 'jpg2gif.html';
+                    window.location.href = 'convert/jpg2gif.html';
                     break;
                 case 'gif-to-png':
-                    window.location.href = 'gif2png.html';
+                    window.location.href = 'convert/gif2png.html';
                     break;
                 case 'gif-to-jpg':
-                    window.location.href = 'gif2jpg.html';
+                    window.location.href = 'convert/gif2jpg.html';
                     break;
                 case 'gif-to-webp':
-                    window.location.href = 'gif2webp.html';
+                    window.location.href = 'convert/gif2webp.html';
                     break;
                 case 'webp-to-png':
-                    window.location.href = 'webp2png.html';
+                    window.location.href = 'convert/webp2png.html';
                     break;
                 case 'webp-to-jpg':
-                    window.location.href = 'webp2jpg.html';
+                    window.location.href = 'convert/webp2jpg.html';
                     break;
                 case 'webp-to-gif':
-                    window.location.href = 'webp2gif.html';
+                    window.location.href = 'convert/webp2gif.html';
                     break;
                 case 'heic-to-png':
-                    window.location.href = 'heic2png.html';
+                    window.location.href = 'convert/heic2png.html';
                     break;
                 case 'heic-to-jpg':
-                    window.location.href = 'heic2jpg.html';
+                    window.location.href = 'convert/heic2jpg.html';
                     break;
                 case 'heic-to-webp':
-                    window.location.href = 'heic2webp.html';
+                    window.location.href = 'convert/heic2webp.html';
                     break;
                 case 'heic-to-gif':
-                    window.location.href = 'heic2gif.html';
+                    window.location.href = 'convert/heic2gif.html';
                     break;
                 case 'mp3-to-wav':
-                    window.location.href = 'mp32wav.html';
+                    window.location.href = 'convert/mp32wav.html';
                     break;
                 case 'wav-to-mp3':
-                    window.location.href = 'wav2mp3.html';
+                    window.location.href = 'convert/wav2mp3.html';
                     break;
                 case 'mp4-to-wav':
-                    window.location.href = 'mp42wav.html';
+                    window.location.href = 'convert/mp42wav.html';
                     break;
                 case 'flac-to-mp3':
-                    window.location.href = 'flac2mp3.html';
+                    window.location.href = 'convert/flac2mp3.html';
                     break;
                 default:
                     alert('This converter is not available yet!');
