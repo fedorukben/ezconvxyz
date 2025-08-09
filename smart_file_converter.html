@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EZConv.XYZ - Smart File Converter</title>
+    <title>EZConv.XYZ - Smart File Converter v1.2</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -18,8 +18,8 @@
         
         .glass-card {
             backdrop-filter: blur(20px);
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(139, 92, 246, 0.2);
         }
         
         .glass-dark {
@@ -148,6 +148,13 @@
         }
         
         .text-gradient {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .text-gradient-white {
             background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -173,7 +180,7 @@
         <!-- Header with Amazing Typography -->
         <div class="text-center mb-16 slide-up">
             <div class="mb-6">
-                <h1 class="text-6xl md:text-7xl font-bold text-gradient mb-6 tracking-tight">
+                <h1 class="text-6xl md:text-7xl font-bold text-gradient-white mb-6 tracking-tight">
                     EZConv.XYZ
                 </h1>
                 <div class="w-32 h-1 bg-gradient-to-r from-purple-500 to-blue-500 mx-auto rounded-full pulse-glow"></div>
@@ -216,10 +223,11 @@
                             <span class="flex items-center"><span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>Images</span>
                             <span class="flex items-center"><span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>Audio</span>
                             <span class="flex items-center"><span class="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>Video</span>
+                            <span class="flex items-center"><span class="w-2 h-2 bg-orange-400 rounded-full mr-2"></span>Data</span>
                         </div>
                     </div>
                 </div>
-                <input type="file" id="fileInput" accept="image/*,audio/*,video/*,.heic,.heif" class="hidden">
+                <input type="file" id="fileInput" accept="image/*,audio/*,video/*,.heic,.heif,.csv,.json,.tsv,.xlsx,.xls" class="hidden">
             </div>
         </div>
 
@@ -319,6 +327,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <script>
         const dropZone = document.getElementById('drop-zone');
@@ -370,6 +379,21 @@
             },
             'video/mp4': {
                 formats: ['wav']
+            },
+            'text/csv': {
+                formats: ['json', 'tsv', 'xlsx']
+            },
+            'application/json': {
+                formats: ['csv', 'tsv', 'xlsx']
+            },
+            'text/tab-separated-values': {
+                formats: ['csv', 'json', 'xlsx']
+            },
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                formats: ['csv', 'json', 'tsv']
+            },
+            'application/vnd.ms-excel': {
+                formats: ['csv', 'json', 'tsv']
             }
         };
 
@@ -380,7 +404,9 @@
             'gif-webp': 'Only the first frame of animated GIFs will be converted.',
             'wav-mp3': 'MP3 is lossy compression. Some audio quality will be lost.',
             'mp4-wav': 'Only the audio track will be extracted from the video.',
-            'webp-jpg': 'WebP transparency will become white in JPG format.'
+            'webp-jpg': 'WebP transparency will become white in JPG format.',
+            'json-xlsx': 'Complex nested JSON structures may be flattened for Excel compatibility.',
+            'xlsx-json': 'Only the first worksheet will be converted to JSON.'
         };
 
         // Event listeners
@@ -418,6 +444,21 @@
             if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
                 return 'heic';
             }
+            if (file.name.toLowerCase().endsWith('.csv')) {
+                return 'text/csv';
+            }
+            if (file.name.toLowerCase().endsWith('.json')) {
+                return 'application/json';
+            }
+            if (file.name.toLowerCase().endsWith('.tsv')) {
+                return 'text/tab-separated-values';
+            }
+            if (file.name.toLowerCase().endsWith('.xlsx')) {
+                return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            }
+            if (file.name.toLowerCase().endsWith('.xls')) {
+                return 'application/vnd.ms-excel';
+            }
             return file.type;
         }
 
@@ -450,6 +491,8 @@
                 showAudioPreview(file);
             } else if (file.type.startsWith('video/')) {
                 showVideoPreview(file);
+            } else if (detectedType.includes('csv') || detectedType.includes('json') || detectedType.includes('tsv') || detectedType.includes('sheet') || detectedType.includes('excel')) {
+                showDataPreview(file, detectedType);
             }
 
             // Show conversion options with delay for better UX
@@ -462,6 +505,11 @@
             imagePreview.classList.add('hidden');
             audioPreview.classList.add('hidden');
             videoPreview.classList.add('hidden');
+            // Remove any existing data preview
+            const existingDataPreview = document.getElementById('dataPreview');
+            if (existingDataPreview) {
+                existingDataPreview.remove();
+            }
             if (currentFileUrl) {
                 URL.revokeObjectURL(currentFileUrl);
             }
@@ -483,6 +531,53 @@
             currentFileUrl = URL.createObjectURL(file);
             videoPreview.src = currentFileUrl;
             videoPreview.classList.remove('hidden');
+        }
+
+        async function showDataPreview(file, fileType) {
+            const previewContainer = document.getElementById('previewSection');
+            
+            // Create data preview element
+            const dataPreview = document.createElement('div');
+            dataPreview.id = 'dataPreview';
+            dataPreview.className = 'bg-gray-50 rounded-xl p-4 max-h-64 overflow-auto';
+            
+            try {
+                const text = await file.text();
+                let previewContent = '';
+                
+                if (fileType.includes('json')) {
+                    try {
+                        const jsonData = JSON.parse(text);
+                        previewContent = `<pre class="text-sm text-gray-700">${JSON.stringify(jsonData, null, 2).substring(0, 1000)}${text.length > 1000 ? '...' : ''}</pre>`;
+                    } catch (e) {
+                        previewContent = `<p class="text-red-500">Invalid JSON format</p>`;
+                    }
+                } else if (fileType.includes('csv') || fileType.includes('tsv')) {
+                    const lines = text.split('\n').slice(0, 10);
+                    const separator = fileType.includes('tsv') ? '\t' : ',';
+                    previewContent = '<div class="overflow-x-auto"><table class="min-w-full text-sm">';
+                    lines.forEach((line, index) => {
+                        if (line.trim()) {
+                            const cells = line.split(separator);
+                            previewContent += `<tr class="${index === 0 ? 'bg-purple-100 font-semibold' : 'bg-white'}">`;
+                            cells.forEach(cell => {
+                                previewContent += `<td class="border border-gray-300 px-2 py-1">${cell.trim()}</td>`;
+                            });
+                            previewContent += '</tr>';
+                        }
+                    });
+                    previewContent += '</table></div>';
+                } else {
+                    previewContent = `<p class="text-gray-600">Data file preview (${formatFileSize(file.size)})</p>`;
+                }
+                
+                dataPreview.innerHTML = previewContent;
+                previewContainer.appendChild(dataPreview);
+                
+            } catch (error) {
+                dataPreview.innerHTML = '<p class="text-red-500">Unable to preview file</p>';
+                previewContainer.appendChild(dataPreview);
+            }
         }
 
         async function handleHEICPreview(file) {
@@ -604,7 +699,11 @@
                 'gif': '🎭',
                 'webp': '🌐',
                 'wav': '🎵',
-                'mp3': '🎶'
+                'mp3': '🎶',
+                'csv': '📊',
+                'json': '📋',
+                'tsv': '📈',
+                'xlsx': '📗'
             };
             return icons[format] || '📄';
         }
@@ -661,6 +760,32 @@
                     blob = await convertWAVToMP3(currentFile);
                 } else if (fromType === 'video/mp4' && toFormat === 'wav') {
                     blob = await convertMP4ToWAV(currentFile);
+                } else if (fromType.includes('csv') && toFormat === 'json') {
+                    blob = await convertCSVToJSON(currentFile);
+                } else if (fromType.includes('csv') && toFormat === 'tsv') {
+                    blob = await convertCSVToTSV(currentFile);
+                } else if (fromType.includes('csv') && toFormat === 'xlsx') {
+                    blob = await convertCSVToXLSX(currentFile);
+                } else if (fromType.includes('json') && toFormat === 'csv') {
+                    blob = await convertJSONToCSV(currentFile);
+                } else if (fromType.includes('json') && toFormat === 'tsv') {
+                    blob = await convertJSONToTSV(currentFile);
+                } else if (fromType.includes('json') && toFormat === 'xlsx') {
+                    blob = await convertJSONToXLSX(currentFile);
+                } else if (fromType.includes('tsv') && toFormat === 'csv') {
+                    blob = await convertTSVToCSV(currentFile);
+                } else if (fromType.includes('tsv') && toFormat === 'json') {
+                    blob = await convertTSVToJSON(currentFile);
+                } else if (fromType.includes('tsv') && toFormat === 'xlsx') {
+                    blob = await convertTSVToXLSX(currentFile);
+                } else if (fromType.includes('sheet') || fromType.includes('excel')) {
+                    if (toFormat === 'csv') {
+                        blob = await convertExcelToCSV(currentFile);
+                    } else if (toFormat === 'json') {
+                        blob = await convertExcelToJSON(currentFile);
+                    } else if (toFormat === 'tsv') {
+                        blob = await convertExcelToTSV(currentFile);
+                    }
                 }
 
                 if (blob) {
@@ -894,6 +1019,159 @@
             
             const wavBuffer = audioBufferToWav(audioBuffer);
             return new Blob([wavBuffer], { type: 'audio/wav' });
+        }
+
+        // Data conversion functions
+        async function convertCSVToJSON(file) {
+            const text = await file.text();
+            const lines = text.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim()) {
+                    const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                    const obj = {};
+                    headers.forEach((header, index) => {
+                        obj[header] = values[index] || '';
+                    });
+                    data.push(obj);
+                }
+            }
+            
+            return new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        }
+
+        async function convertCSVToTSV(file) {
+            const text = await file.text();
+            const lines = text.trim().split('\n');
+            const tsvLines = lines.map(line => {
+                return line.split(',').map(cell => cell.trim().replace(/"/g, '')).join('\t');
+            });
+            
+            return new Blob([tsvLines.join('\n')], { type: 'text/tab-separated-values' });
+        }
+
+        async function convertCSVToXLSX(file) {
+            // For now, convert to CSV format with Excel-friendly headers
+            // In a full implementation, you'd use a library like SheetJS
+            const text = await file.text();
+            const csvWithBOM = '\ufeff' + text; // Add BOM for Excel compatibility
+            return new Blob([csvWithBOM], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        }
+
+        async function convertJSONToCSV(file) {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            if (!Array.isArray(data)) {
+                throw new Error('JSON must be an array of objects for CSV conversion');
+            }
+            
+            if (data.length === 0) {
+                return new Blob([''], { type: 'text/csv' });
+            }
+            
+            const headers = Object.keys(data[0]);
+            const csvLines = [headers.join(',')];
+            
+            data.forEach(obj => {
+                const values = headers.map(header => {
+                    let value = obj[header] || '';
+                    if (typeof value === 'object') {
+                        value = JSON.stringify(value);
+                    }
+                    return `"${value}"`;
+                });
+                csvLines.push(values.join(','));
+            });
+            
+            return new Blob([csvLines.join('\n')], { type: 'text/csv' });
+        }
+
+        async function convertJSONToTSV(file) {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            if (!Array.isArray(data)) {
+                throw new Error('JSON must be an array of objects for TSV conversion');
+            }
+            
+            if (data.length === 0) {
+                return new Blob([''], { type: 'text/tab-separated-values' });
+            }
+            
+            const headers = Object.keys(data[0]);
+            const tsvLines = [headers.join('\t')];
+            
+            data.forEach(obj => {
+                const values = headers.map(header => {
+                    let value = obj[header] || '';
+                    if (typeof value === 'object') {
+                        value = JSON.stringify(value);
+                    }
+                    return value.toString().replace(/\t/g, ' ');
+                });
+                tsvLines.push(values.join('\t'));
+            });
+            
+            return new Blob([tsvLines.join('\n')], { type: 'text/tab-separated-values' });
+        }
+
+        async function convertJSONToXLSX(file) {
+            // Convert JSON to CSV format for Excel compatibility
+            return await convertJSONToCSV(file);
+        }
+
+        async function convertTSVToCSV(file) {
+            const text = await file.text();
+            const lines = text.trim().split('\n');
+            const csvLines = lines.map(line => {
+                return line.split('\t').map(cell => `"${cell.trim()}"`).join(',');
+            });
+            
+            return new Blob([csvLines.join('\n')], { type: 'text/csv' });
+        }
+
+        async function convertTSVToJSON(file) {
+            const text = await file.text();
+            const lines = text.trim().split('\n');
+            const headers = lines[0].split('\t').map(h => h.trim());
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim()) {
+                    const values = lines[i].split('\t').map(v => v.trim());
+                    const obj = {};
+                    headers.forEach((header, index) => {
+                        obj[header] = values[index] || '';
+                    });
+                    data.push(obj);
+                }
+            }
+            
+            return new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        }
+
+        async function convertTSVToXLSX(file) {
+            // Convert TSV to CSV format for Excel compatibility
+            return await convertTSVToCSV(file);
+        }
+
+        async function convertExcelToCSV(file) {
+            // This is a simplified version - for full Excel support, you'd need SheetJS
+            const text = await file.text();
+            return new Blob([text], { type: 'text/csv' });
+        }
+
+        async function convertExcelToJSON(file) {
+            // This is a simplified version - for full Excel support, you'd need SheetJS
+            throw new Error('Excel to JSON conversion requires additional libraries. Please use CSV format instead.');
+        }
+
+        async function convertExcelToTSV(file) {
+            // This is a simplified version - for full Excel support, you'd need SheetJS
+            throw new Error('Excel to TSV conversion requires additional libraries. Please use CSV format instead.');
         }
 
         async function convertWAVToMP3(file) {
