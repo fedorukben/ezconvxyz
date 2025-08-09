@@ -223,7 +223,7 @@
                             <span class="flex items-center"><span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>Images</span>
                             <span class="flex items-center"><span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>Audio</span>
                             <span class="flex items-center"><span class="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>Video</span>
-                            <span class="flex items-center"><span class="w-2 h-2 bg-orange-400 rounded-full mr-2"></span>Data</span>
+                            <span class="flex items-center"><span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>Data</span>
                         </div>
                     </div>
                 </div>
@@ -381,13 +381,13 @@
                 formats: ['wav']
             },
             'text/csv': {
-                formats: ['json', 'tsv', 'xlsx']
+                formats: ['json', 'tsv']
             },
             'application/json': {
-                formats: ['csv', 'tsv', 'xlsx']
+                formats: ['csv', 'tsv']
             },
             'text/tab-separated-values': {
-                formats: ['csv', 'json', 'xlsx']
+                formats: ['csv', 'json']
             },
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
                 formats: ['csv', 'json', 'tsv']
@@ -702,8 +702,7 @@
                 'mp3': '🎶',
                 'csv': '📊',
                 'json': '📋',
-                'tsv': '📈',
-                'xlsx': '📗'
+                'tsv': '📈'
             };
             return icons[format] || '📄';
         }
@@ -764,20 +763,14 @@
                     blob = await convertCSVToJSON(currentFile);
                 } else if (fromType.includes('csv') && toFormat === 'tsv') {
                     blob = await convertCSVToTSV(currentFile);
-                } else if (fromType.includes('csv') && toFormat === 'xlsx') {
-                    blob = await convertCSVToXLSX(currentFile);
                 } else if (fromType.includes('json') && toFormat === 'csv') {
                     blob = await convertJSONToCSV(currentFile);
                 } else if (fromType.includes('json') && toFormat === 'tsv') {
                     blob = await convertJSONToTSV(currentFile);
-                } else if (fromType.includes('json') && toFormat === 'xlsx') {
-                    blob = await convertJSONToXLSX(currentFile);
                 } else if (fromType.includes('tsv') && toFormat === 'csv') {
                     blob = await convertTSVToCSV(currentFile);
                 } else if (fromType.includes('tsv') && toFormat === 'json') {
                     blob = await convertTSVToJSON(currentFile);
-                } else if (fromType.includes('tsv') && toFormat === 'xlsx') {
-                    blob = await convertTSVToXLSX(currentFile);
                 } else if (fromType.includes('sheet') || fromType.includes('excel')) {
                     if (toFormat === 'csv') {
                         blob = await convertExcelToCSV(currentFile);
