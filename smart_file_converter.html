@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart File Converter</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+    <main class="container mx-auto px-4 py-8 max-w-2xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Smart File Converter</h1>
+            <p class="text-gray-600 text-lg">Upload a file and see what you can do with it</p>
+        </div>
+
+        <!-- Upload Area -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div id="drop-zone" 
+                 class="group relative border-2 border-dashed border-gray-200 rounded-xl 
+                        bg-gray-50 p-12 text-center cursor-pointer transition-all duration-300
+                        hover:border-blue-400 hover:bg-blue-50">
+                <div class="space-y-4">
+                    <div class="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-blue-100">
+                        <svg class="w-10 h-10 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 font-medium text-lg">Drop your file here</p>
+                        <p class="text-sm text-gray-400 mt-1">or click to browse</p>
+                        <p class="text-xs text-gray-400 mt-2">Supports images, audio, and video files</p>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept="image/*,audio/*,video/*,.heic,.heif" class="hidden">
+            </div>
+        </div>
+
+        <!-- File Info and Preview -->
+        <div id="fileSection" class="hidden bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Your File</h2>
+            
+            <!-- File Info -->
+            <div id="fileInfo" class="bg-gray-50 rounded-xl p-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <span class="font-medium text-gray-700">Name:</span>
+                        <span id="fileName" class="text-gray-600 ml-1"></span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-700">Type:</span>
+                        <span id="fileType" class="text-gray-600 ml-1"></span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-700">Size:</span>
+                        <span id="fileSize" class="text-gray-600 ml-1"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div id="previewSection" class="mb-6">
+                <img id="imagePreview" class="hidden max-w-full max-h-64 rounded-xl shadow-lg mx-auto" alt="Preview">
+                <audio id="audioPreview" class="hidden w-full rounded-xl" controls></audio>
+                <video id="videoPreview" class="hidden w-full max-h-64 rounded-xl" controls></video>
+            </div>
+        </div>
+
+        <!-- Conversion Options -->
+        <div id="optionsSection" class="hidden bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Available Conversions</h2>
+            
+            <!-- Warning Messages -->
+            <div id="warningSection" class="hidden mb-6"></div>
+            
+            <!-- Conversion Grid -->
+            <div id="conversionGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"></div>
+            
+            <!-- Tools Section -->
+            <div id="toolsSection" class="hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Image Tools</h3>
+                <div id="toolsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+        </div>
+
+        <!-- Processing Overlay -->
+        <div id="processingOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p class="text-gray-700 font-medium">Processing your file...</p>
+                <p class="text-gray-500 text-sm mt-2">This may take a moment</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('fileInput');
+        const fileSection = document.getElementById('fileSection');
+        const optionsSection = document.getElementById('optionsSection');
+        const fileName = document.getElementById('fileName');
+        const fileType = document.getElementById('fileType');
+        const fileSize = document.getElementById('fileSize');
+        const imagePreview = document.getElementById('imagePreview');
+        const audioPreview = document.getElementById('audioPreview');
+        const videoPreview = document.getElementById('videoPreview');
+        const conversionGrid = document.getElementById('conversionGrid');
+        const toolsSection = document.getElementById('toolsSection');
+        const toolsGrid = document.getElementById('toolsGrid');
+        const warningSection = document.getElementById('warningSection');
+        const processingOverlay = document.getElementById('processingOverlay');
+
+        let currentFile = null;
+        let currentFileUrl = null;
+
+        // File type mappings and conversions
+        const conversions = {
+            'image/png': {
+                formats: ['jpg', 'webp', 'gif'],
+                tools: ['circle-crop']
+            },
+            'image/jpeg': {
+                formats: ['png', 'webp', 'gif'],
+                tools: ['circle-crop']
+            },
+            'image/gif': {
+                formats: ['png', 'jpg', 'webp'],
+                tools: ['circle-crop']
+            },
+            'image/webp': {
+                formats: ['png', 'jpg', 'gif'],
+                tools: ['circle-crop']
+            },
+            'heic': {
+                formats: ['png', 'jpg', 'webp', 'gif'],
+                tools: ['circle-crop']
+            },
+            'audio/mp3': {
+                formats: ['wav']
+            },
+            'audio/wav': {
+                formats: ['mp3']
+            },
+            'video/mp4': {
+                formats: ['wav']
+            }
+        };
+
+        const warnings = {
+            'png-jpg': 'JPG doesn\'t support transparency. Transparent areas will become white.',
+            'gif-png': 'Only the first frame of animated GIFs will be converted.',
+            'gif-jpg': 'Only the first frame of animated GIFs will be converted. Transparency will become white.',
+            'gif-webp': 'Only the first frame of animated GIFs will be converted.',
+            'wav-mp3': 'MP3 is lossy compression. Some audio quality will be lost.',
+            'mp4-wav': 'Only the audio track will be extracted from the video.',
+            'webp-jpg': 'WebP transparency will become white in JPG format.'
+        };
+
+        // Event listeners
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFile);
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-400', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                handleFile({ target: { files: [file] } });
+            }
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function getFileType(file) {
+            if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+                return 'heic';
+            }
+            return file.type;
+        }
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            currentFile = file;
+            const detectedType = getFileType(file);
+
+            // Update file info
+            fileName.textContent = file.name;
+            fileType.textContent = detectedType === 'heic' ? 'HEIC' : file.type;
+            fileSize.textContent = formatFileSize(file.size);
+
+            // Show file section
+            fileSection.classList.remove('hidden');
+
+            // Handle preview
+            hideAllPreviews();
+            
+            if (detectedType === 'heic') {
+                handleHEICPreview(file);
+            } else if (file.type.startsWith('image/')) {
+                showImagePreview(file);
+            } else if (file.type.startsWith('audio/')) {
+                showAudioPreview(file);
+            } else if (file.type.startsWith('video/')) {
+                showVideoPreview(file);
+            }
+
+            // Show conversion options
+            showConversionOptions(detectedType);
+        }
+
+        function hideAllPreviews() {
+            imagePreview.classList.add('hidden');
+            audioPreview.classList.add('hidden');
+            videoPreview.classList.add('hidden');
+            if (currentFileUrl) {
+                URL.revokeObjectURL(currentFileUrl);
+            }
+        }
+
+        function showImagePreview(file) {
+            currentFileUrl = URL.createObjectURL(file);
+            imagePreview.src = currentFileUrl;
+            imagePreview.classList.remove('hidden');
+        }
+
+        function showAudioPreview(file) {
+            currentFileUrl = URL.createObjectURL(file);
+            audioPreview.src = currentFileUrl;
+            audioPreview.classList.remove('hidden');
+        }
+
+        function showVideoPreview(file) {
+            currentFileUrl = URL.createObjectURL(file);
+            videoPreview.src = currentFileUrl;
+            videoPreview.classList.remove('hidden');
+        }
+
+        async function handleHEICPreview(file) {
+            try {
+                const jpegBlob = await heic2any({
+                    blob: file,
+                    toType: "image/jpeg",
+                    quality: 0.9
+                });
+                currentFileUrl = URL.createObjectURL(jpegBlob);
+                imagePreview.src = currentFileUrl;
+                imagePreview.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error previewing HEIC:', error);
+            }
+        }
+
+        function showConversionOptions(fileType) {
+            const options = conversions[fileType];
+            if (!options) {
+                optionsSection.classList.add('hidden');
+                return;
+            }
+
+            // Clear previous options
+            conversionGrid.innerHTML = '';
+            toolsGrid.innerHTML = '';
+            warningSection.innerHTML = '';
+
+            // Show conversion formats
+            if (options.formats) {
+                options.formats.forEach(format => {
+                    const button = createConversionButton(fileType, format);
+                    conversionGrid.appendChild(button);
+                });
+            }
+
+            // Show tools
+            if (options.tools) {
+                options.tools.forEach(tool => {
+                    const button = createToolButton(tool);
+                    toolsGrid.appendChild(button);
+                });
+                toolsSection.classList.remove('hidden');
+            } else {
+                toolsSection.classList.add('hidden');
+            }
+
+            optionsSection.classList.remove('hidden');
+        }
+
+        function createConversionButton(fromType, toFormat) {
+            const button = document.createElement('button');
+            button.className = `p-4 border-2 border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 
+                              transition-all duration-300 text-center group`;
+            
+            const fromFormat = fromType.split('/')[1] || fromType;
+            const warningKey = `${fromFormat}-${toFormat}`;
+            
+            button.innerHTML = `
+                <div class="text-2xl mb-2">${getFormatIcon(toFormat)}</div>
+                <div class="font-semibold text-gray-800 group-hover:text-blue-600">Convert to ${toFormat.toUpperCase()}</div>
+                ${warnings[warningKey] ? `<div class="text-xs text-amber-600 mt-1">⚠️ ${warnings[warningKey]}</div>` : ''}
+            `;
+
+            button.addEventListener('click', () => convertFile(fromType, toFormat));
+            return button;
+        }
+
+        function createToolButton(tool) {
+            const button = document.createElement('button');
+            button.className = `p-4 border-2 border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 
+                              transition-all duration-300 text-center group`;
+            
+            const toolInfo = getToolInfo(tool);
+            button.innerHTML = `
+                <div class="text-2xl mb-2">${toolInfo.icon}</div>
+                <div class="font-semibold text-gray-800 group-hover:text-green-600">${toolInfo.name}</div>
+                <div class="text-xs text-gray-500 mt-1">${toolInfo.description}</div>
+            `;
+
+            button.addEventListener('click', () => useTool(tool));
+            return button;
+        }
+
+        function getFormatIcon(format) {
+            const icons = {
+                'jpg': '🖼️',
+                'png': '🎨',
+                'gif': '🎭',
+                'webp': '🌐',
+                'wav': '🎵',
+                'mp3': '🎶'
+            };
+            return icons[format] || '📄';
+        }
+
+        function getToolInfo(tool) {
+            const tools = {
+                'circle-crop': {
+                    name: 'Circle Crop',
+                    description: 'Crop image into a perfect circle',
+                    icon: '⭕'
+                }
+            };
+            return tools[tool] || { name: tool, description: '', icon: '🔧' };
+        }
+
+        function showProcessing() {
+            processingOverlay.classList.remove('hidden');
+        }
+
+        function hideProcessing() {
+            processingOverlay.classList.add('hidden');
+        }
+
+        async function convertFile(fromType, toFormat) {
+            if (!currentFile) return;
+
+            showProcessing();
+
+            try {
+                let blob;
+                const fromFormat = fromType.split('/')[1] || fromType;
+
+                if (fromType === 'heic') {
+                    blob = await convertHEIC(currentFile, toFormat);
+                } else if (fromFormat === 'png' && toFormat === 'jpg') {
+                    blob = await convertPNGToJPG(currentFile);
+                } else if (fromFormat === 'png' && toFormat === 'webp') {
+                    blob = await convertImageToWebP(currentFile);
+                } else if (fromFormat === 'png' && toFormat === 'gif') {
+                    blob = await convertImageToGIF(currentFile);
+                } else if (fromFormat === 'jpeg' && toFormat === 'png') {
+                    blob = await convertJPGToPNG(currentFile);
+                } else if (fromFormat === 'jpeg' && toFormat === 'webp') {
+                    blob = await convertImageToWebP(currentFile);
+                } else if (fromFormat === 'jpeg' && toFormat === 'gif') {
+                    blob = await convertImageToGIF(currentFile);
+                } else if (fromFormat === 'gif') {
+                    blob = await convertGIF(currentFile, toFormat);
+                } else if (fromFormat === 'webp') {
+                    blob = await convertWebP(currentFile, toFormat);
+                } else if (fromType === 'audio/mp3' && toFormat === 'wav') {
+                    blob = await convertMP3ToWAV(currentFile);
+                } else if (fromType === 'audio/wav' && toFormat === 'mp3') {
+                    blob = await convertWAVToMP3(currentFile);
+                } else if (fromType === 'video/mp4' && toFormat === 'wav') {
+                    blob = await convertMP4ToWAV(currentFile);
+                }
+
+                if (blob) {
+                    downloadBlob(blob, `converted.${toFormat}`);
+                }
+            } catch (error) {
+                console.error('Conversion error:', error);
+                alert('Error converting file. Please try again.');
+            }
+
+            hideProcessing();
+        }
+
+        function useTool(tool) {
+            if (!currentFile) return;
+
+            showProcessing();
+
+            try {
+                if (tool === 'circle-crop') {
+                    circleCorpImage(currentFile);
+                }
+            } catch (error) {
+                console.error('Tool error:', error);
+                alert('Error processing file. Please try again.');
+            }
+
+            hideProcessing();
+        }
+
+        // Conversion functions
+        async function convertHEIC(file, toFormat) {
+            const convertedBlob = await heic2any({
+                blob: file,
+                toType: toFormat === 'jpg' ? 'image/jpeg' : `image/${toFormat}`,
+                quality: 0.9
+            });
+
+            if (toFormat === 'gif') {
+                return await convertBlobToGIF(convertedBlob);
+            }
+
+            return convertedBlob;
+        }
+
+        async function convertPNGToJPG(file) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    
+                    // Fill with white background
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    
+                    canvas.toBlob(resolve, 'image/jpeg', 0.9);
+                };
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        async function convertJPGToPNG(file) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    ctx.drawImage(img, 0, 0);
+                    canvas.toBlob(resolve, 'image/png');
+                };
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        async function convertImageToWebP(file) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    ctx.drawImage(img, 0, 0);
+                    canvas.toBlob(resolve, 'image/webp', 0.9);
+                };
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        async function convertImageToGIF(file) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const gif = new GIF({
+                        workers: 2,
+                        quality: 10,
+                        width: canvas.width,
+                        height: canvas.height,
+                        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+                    });
+
+                    gif.addFrame(canvas, {delay: 0});
+                    gif.on('finished', resolve);
+                    gif.render();
+                };
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        async function convertGIF(file, toFormat) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    
+                    if (toFormat === 'jpg') {
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    }
+                    
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const mimeType = toFormat === 'jpg' ? 'image/jpeg' : `image/${toFormat}`;
+                    canvas.toBlob(resolve, mimeType, 0.9);
+                };
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        async function convertWebP(file, toFormat) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    
+                    if (toFormat === 'jpg') {
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    }
+                    
+                    ctx.drawImage(img, 0, 0);
+                    
+                    if (toFormat === 'gif') {
+                        const gif = new GIF({
+                            workers: 2,
+                            quality: 10,
+                            width: canvas.width,
+                            height: canvas.height,
+                            workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+                        });
+                        gif.addFrame(canvas, {delay: 0});
+                        gif.on('finished', resolve);
+                        gif.render();
+                    } else {
+                        const mimeType = toFormat === 'jpg' ? 'image/jpeg' : `image/${toFormat}`;
+                        canvas.toBlob(resolve, mimeType, 0.9);
+                    }
+                };
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        async function convertMP3ToWAV(file) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const arrayBuffer = await file.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            
+            const wavBuffer = audioBufferToWav(audioBuffer);
+            return new Blob([wavBuffer], { type: 'audio/wav' });
+        }
+
+        async function convertWAVToMP3(file) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const arrayBuffer = await file.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            
+            const samples = audioBuffer.getChannelData(0);
+            const sampleRate = audioBuffer.sampleRate;
+            
+            const buffer = new Int16Array(samples.length);
+            for (let i = 0; i < samples.length; i++) {
+                buffer[i] = Math.max(-32768, Math.min(32767, samples[i] * 32768));
+            }
+            
+            const mp3encoder = new lamejs.Mp3Encoder(1, sampleRate, 128);
+            const mp3Data = [];
+            
+            const chunkSize = 1152;
+            for (let i = 0; i < buffer.length; i += chunkSize) {
+                const chunk = buffer.subarray(i, i + chunkSize);
+                const mp3buf = mp3encoder.encodeBuffer(chunk);
+                if (mp3buf.length > 0) {
+                    mp3Data.push(mp3buf);
+                }
+            }
+            
+            const mp3buf = mp3encoder.flush();
+            if (mp3buf.length > 0) {
+                mp3Data.push(mp3buf);
+            }
+            
+            return new Blob(mp3Data, { type: 'audio/mp3' });
+        }
+
+        async function convertMP4ToWAV(file) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const arrayBuffer = await file.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            
+            const wavBuffer = audioBufferToWav(audioBuffer);
+            return new Blob([wavBuffer], { type: 'audio/wav' });
+        }
+
+        function circleCorpImage(file) {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                const size = Math.min(img.naturalWidth, img.naturalHeight);
+                canvas.width = size;
+                canvas.height = size;
+                
+                const sourceX = (img.naturalWidth - size) / 2;
+                const sourceY = (img.naturalHeight - size) / 2;
+                
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+                ctx.clip();
+                
+                ctx.drawImage(img, sourceX, sourceY, size, size, 0, 0, size, size);
+                
+                canvas.toBlob((blob) => {
+                    downloadBlob(blob, 'circle-crop.png');
+                    hideProcessing();
+                }, 'image/png');
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        // Helper functions
+        function audioBufferToWav(buffer) {
+            const numOfChan = buffer.numberOfChannels;
+            const length = buffer.length * numOfChan * 2;
+            const buffer2 = new ArrayBuffer(44 + length);
+            const view = new DataView(buffer2);
+            const channels = [];
+            let sample;
+            let offset = 0;
+            let pos = 0;
+
+            setUint32(0x46464952);
+            setUint32(36 + length);
+            setUint32(0x45564157);
+            setUint32(0x20746d66);
+            setUint32(16);
+            setUint16(1);
+            setUint16(numOfChan);
+            setUint32(buffer.sampleRate);
+            setUint32(buffer.sampleRate * 2 * numOfChan);
+            setUint16(numOfChan * 2);
+            setUint16(16);
+            setUint32(0x61746164);
+            setUint32(length);
+
+            for(let i = 0; i < buffer.numberOfChannels; i++)
+                channels.push(buffer.getChannelData(i));
+
+            while(pos < buffer.length) {
+                for(let i = 0; i < numOfChan; i++) {
+                    sample = Math.max(-1, Math.min(1, channels[i][pos]));
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
+                    view.setInt16(44 + offset, sample, true); offset += 2;
+                }
+                pos++;
+            }
+
+            return buffer2;
+
+            function setUint16(data) {
+                view.setUint16(pos, data, true);
+                pos += 2;
+            }
+
+            function setUint32(data) {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            }
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
