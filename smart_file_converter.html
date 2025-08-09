@@ -116,6 +116,102 @@
                 transform: translateY(0);
             }
         }
+
+        function processText() {
+            const text = textInput.value.trim();
+            if (!text) return;
+
+            // Clear file upload when text is processed
+            currentFile = null;
+            fileInput.value = '';
+            hideAllPreviews();
+
+            // For now, we'll just show QR code generation as the first text processing feature
+            // This can be expanded to other text processing options in the future
+            try {
+                // Create QR code
+                currentQR = new QRious({
+                    element: document.createElement('canvas'),
+                    value: text,
+                    size: 256,
+                    level: 'M'
+                });
+
+                // Show text processing preview
+                showTextPreview();
+
+            } catch (error) {
+                showErrorMessage('Error processing text. Please try again.');
+                console.error('Text processing error:', error);
+            }
+        }
+
+        function showTextPreview() {
+            // Update file info for processed text
+            fileName.textContent = 'qr-code.png';
+            fileType.textContent = 'Generated QR Code';
+            fileSize.textContent = 'Ready to download';
+
+            // Show QR in image preview
+            imagePreview.src = currentQR.canvas.toDataURL();
+            imagePreview.classList.remove('hidden');
+
+            // Show file section
+            setTimeout(() => {
+                fileSection.classList.remove('hidden');
+                fileSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+
+            // Show download options
+            setTimeout(() => {
+                showTextOptions();
+            }, 600);
+        }
+
+        function showTextOptions() {
+            // Clear previous options
+            conversionGrid.innerHTML = '';
+            toolsGrid.innerHTML = '';
+            warningSection.innerHTML = '';
+
+            // Add download button
+            const downloadButton = document.createElement('button');
+            downloadButton.className = `conversion-card p-8 rounded-2xl text-center group relative overflow-hidden`;
+            downloadButton.innerHTML = `
+                <div class="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                    💾
+                </div>
+                <div class="font-bold text-xl text-gray-800 group-hover:text-purple-600 mb-2 transition-colors duration-300">
+                    Download QR Code
+                </div>
+                <div class="text-gray-600 text-sm mb-4">
+                    Save as PNG image
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl"></div>
+            `;
+
+            downloadButton.addEventListener('click', () => {
+                if (currentQR) {
+                    currentQR.canvas.toBlob((blob) => {
+                        downloadBlob(blob, 'qr-code.png');
+                        showSuccessMessage('PNG');
+                    }, 'image/png');
+                }
+            });
+
+            conversionGrid.appendChild(downloadButton);
+            downloadButton.style.animation = `slideUp 0.6s ease-out both`;
+
+            toolsSection.classList.add('hidden');
+            optionsSection.classList.remove('hidden');
+            
+            setTimeout(() => {
+                optionsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        }
+
+        function hideTextPreview() {
+            currentQR = null;
         
         .warning-card {
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%);
@@ -223,11 +319,52 @@
                             <span class="flex items-center"><span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>Images</span>
                             <span class="flex items-center"><span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>Audio</span>
                             <span class="flex items-center"><span class="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>Video</span>
-                            <span class="flex items-center"><span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>Data</span>
+                            <span class="flex items-center"><span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Data</span>
                         </div>
                     </div>
                 </div>
                 <input type="file" id="fileInput" accept="image/*,audio/*,video/*,.heic,.heif,.csv,.json,.tsv,.xlsx,.xls" class="hidden">
+            </div>
+
+            <!-- OR Divider -->
+            <div class="flex items-center my-8">
+                <div class="flex-1 h-px bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
+                <div class="px-6 text-gray-500 font-medium">OR</div>
+                <div class="flex-1 h-px bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
+            </div>
+
+            <!-- Text Input -->
+            <div class="text-center">
+                <div class="mb-6">
+                    <div class="w-16 h-16 mx-auto bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-4 icon-glow">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Enter Text</h3>
+                    <p class="text-gray-600">Type or paste your content</p>
+                </div>
+                
+                <div class="max-w-md mx-auto space-y-4">
+                    <textarea 
+                        id="textInput" 
+                        placeholder="Enter text, URL, or any content..."
+                        class="w-full p-4 border-2 border-purple-200 rounded-xl bg-gray-50 
+                               focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                               resize-none h-24 transition-all duration-300"
+                        maxlength="500">
+                    </textarea>
+                    <button 
+                        id="processTextBtn"
+                        disabled
+                        class="w-full py-3 px-6 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl 
+                               font-medium shadow-lg shadow-purple-500/30 opacity-90 hover:opacity-100
+                               disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none
+                               focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2
+                               transition-all duration-300 transform hover:scale-105">
+                        Process Text
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -345,9 +482,14 @@
         const toolsGrid = document.getElementById('toolsGrid');
         const warningSection = document.getElementById('warningSection');
         const processingOverlay = document.getElementById('processingOverlay');
+        
+        // Text input elements
+        const textInput = document.getElementById('textInput');
+        const processTextBtn = document.getElementById('processTextBtn');
 
         let currentFile = null;
         let currentFileUrl = null;
+        let currentQR = null;
 
         // File type mappings and conversions
         const conversions = {
@@ -432,6 +574,24 @@
             }
         });
 
+        // Text input event listeners
+        textInput.addEventListener('input', () => {
+            const hasText = textInput.value.trim().length > 0;
+            processTextBtn.disabled = !hasText;
+        });
+
+        processTextBtn.addEventListener('click', processText);
+
+        // Allow Enter to process text (Shift+Enter for new line)
+        textInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!processTextBtn.disabled) {
+                    processText();
+                }
+            }
+        });
+
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -465,6 +625,11 @@
         function handleFile(e) {
             const file = e.target.files[0];
             if (!file) return;
+
+            // Clear text input when file is uploaded
+            textInput.value = '';
+            processTextBtn.disabled = true;
+            hideTextPreview();
 
             currentFile = file;
             const detectedType = getFileType(file);
