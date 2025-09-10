@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EZConv.XYZ - Smart File Converter v1.2</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -204,6 +205,87 @@
                     <div class="text-sm">Zero Config</div>
                 </div>
             </div>
+
+            <!-- Features Carousel -->
+            <div class="mt-12">
+                <div class="relative overflow-hidden">
+                    <div id="featuresCarousel" class="flex transition-transform duration-500 ease-in-out">
+                        <!-- Feature 1: Image Conversion -->
+                        <div class="w-full flex-shrink-0 px-4">
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white mb-2">Image Conversion</h3>
+                                <p class="text-white/70 text-sm">Convert between PNG, JPG, GIF, WebP, and HEIC formats with perfect quality</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Feature 2: Audio Processing -->
+                        <div class="w-full flex-shrink-0 px-4">
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white mb-2">Audio Processing</h3>
+                                <p class="text-white/70 text-sm">Extract audio from videos and convert between MP3, WAV formats</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Feature 3: Smart Tools -->
+                        <div class="w-full flex-shrink-0 px-4">
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white mb-2">Smart Tools</h3>
+                                <p class="text-white/70 text-sm">Resize, compress, crop, rotate, flip, and remove backgrounds from images</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Feature 4: Data Conversion -->
+                        <div class="w-full flex-shrink-0 px-4">
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white mb-2">Data Conversion</h3>
+                                <p class="text-white/70 text-sm">Convert CSV, JSON, TSV, and Excel files between different formats</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Feature 5: QR Generation -->
+                        <div class="w-full flex-shrink-0 px-4">
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white mb-2">QR Generation</h3>
+                                <p class="text-white/70 text-sm">Generate QR codes from any text, URL, or content instantly</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Carousel Navigation -->
+                    <div class="flex justify-center mt-6 space-x-2">
+                        <button id="carouselPrev" class="w-3 h-3 rounded-full bg-white/30 hover:bg-white/60 transition-colors"></button>
+                        <button id="carouselNext" class="w-3 h-3 rounded-full bg-white/30 hover:bg-white/60 transition-colors"></button>
+                        <button id="carouselNext2" class="w-3 h-3 rounded-full bg-white/30 hover:bg-white/60 transition-colors"></button>
+                        <button id="carouselNext3" class="w-3 h-3 rounded-full bg-white/30 hover:bg-white/60 transition-colors"></button>
+                        <button id="carouselNext4" class="w-3 h-3 rounded-full bg-white/30 hover:bg-white/60 transition-colors"></button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Upload Area with Glass Morphism -->
@@ -395,6 +477,8 @@
         let currentFile = null;
         let currentFileUrl = null;
         let currentQR = null;
+        let currentCarouselSlide = 0;
+        const totalCarouselSlides = 5;
 
         // File type mappings and conversions
         const conversions = {
@@ -425,7 +509,7 @@
                 formats: ['mp3']
             },
             'video/mp4': {
-                formats: ['wav']
+                formats: ['wav', 'mp3']
             },
             'text/csv': {
                 formats: ['json', 'tsv']
@@ -496,6 +580,63 @@
                 }
             }
         });
+
+        // Carousel functionality
+        function updateCarousel() {
+            const carousel = document.getElementById('featuresCarousel');
+            const translateX = -currentCarouselSlide * 100;
+            carousel.style.transform = `translateX(${translateX}%)`;
+            
+            // Update navigation dots
+            const dots = document.querySelectorAll('[id^="carousel"]');
+            dots.forEach((dot, index) => {
+                if (index === currentCarouselSlide) {
+                    dot.classList.remove('bg-white/30');
+                    dot.classList.add('bg-white/80');
+                } else {
+                    dot.classList.remove('bg-white/80');
+                    dot.classList.add('bg-white/30');
+                }
+            });
+        }
+
+        function nextCarouselSlide() {
+            currentCarouselSlide = (currentCarouselSlide + 1) % totalCarouselSlides;
+            updateCarousel();
+        }
+
+        function prevCarouselSlide() {
+            currentCarouselSlide = (currentCarouselSlide - 1 + totalCarouselSlides) % totalCarouselSlides;
+            updateCarousel();
+        }
+
+        // Carousel event listeners
+        document.getElementById('carouselNext').addEventListener('click', () => {
+            currentCarouselSlide = 1;
+            updateCarousel();
+        });
+        document.getElementById('carouselNext2').addEventListener('click', () => {
+            currentCarouselSlide = 2;
+            updateCarousel();
+        });
+        document.getElementById('carouselNext3').addEventListener('click', () => {
+            currentCarouselSlide = 3;
+            updateCarousel();
+        });
+        document.getElementById('carouselNext4').addEventListener('click', () => {
+            currentCarouselSlide = 4;
+            updateCarousel();
+        });
+        document.getElementById('carouselPrev').addEventListener('click', () => {
+            currentCarouselSlide = 0;
+            updateCarousel();
+        });
+
+        // Auto-advance carousel every 4 seconds
+        setInterval(nextCarouselSlide, 4000);
+
+        // Initialize carousel
+        updateCarousel();
 
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
@@ -826,7 +967,8 @@
                     description: 'Automatically remove background from images',
                     icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12c0 4.418-3.582 8-8 8s-8-3.582-8-8 3.582-8 8-8 8 3.582 8 8z" opacity="0.3"/>
                     </svg>`
                 },
                 'rotate': {
@@ -848,7 +990,7 @@
                     description: 'Crop image to custom dimensions and aspect ratios',
                     icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6v6"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m0 0v8m0-8l-8 8"/>
                     </svg>`
                 }
             };
@@ -899,6 +1041,8 @@
                     blob = await convertWAVToMP3(currentFile);
                 } else if (fromType === 'video/mp4' && toFormat === 'wav') {
                     blob = await convertMP4ToWAV(currentFile);
+                } else if (fromType === 'video/mp4' && toFormat === 'mp3') {
+                    blob = await convertMP4ToMP3(currentFile);
                 } else if (fromType.includes('csv') && toFormat === 'json') {
                     blob = await convertCSVToJSON(currentFile);
                 } else if (fromType.includes('csv') && toFormat === 'tsv') {
@@ -1375,6 +1519,39 @@
             
             const wavBuffer = audioBufferToWav(audioBuffer);
             return new Blob([wavBuffer], { type: 'audio/wav' });
+        }
+
+        async function convertMP4ToMP3(file) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const arrayBuffer = await file.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            
+            const samples = audioBuffer.getChannelData(0);
+            const sampleRate = audioBuffer.sampleRate;
+            
+            const buffer = new Int16Array(samples.length);
+            for (let i = 0; i < samples.length; i++) {
+                buffer[i] = Math.max(-32768, Math.min(32767, samples[i] * 32768));
+            }
+            
+            const mp3encoder = new lamejs.Mp3Encoder(1, sampleRate, 128);
+            const mp3Data = [];
+            
+            const chunkSize = 1152;
+            for (let i = 0; i < buffer.length; i += chunkSize) {
+                const chunk = buffer.subarray(i, i + chunkSize);
+                const mp3buf = mp3encoder.encodeBuffer(chunk);
+                if (mp3buf.length > 0) {
+                    mp3Data.push(mp3buf);
+                }
+            }
+            
+            const mp3buf = mp3encoder.flush();
+            if (mp3buf.length > 0) {
+                mp3Data.push(mp3buf);
+            }
+            
+            return new Blob(mp3Data, { type: 'audio/mp3' });
         }
 
         function circleCorpImage(file) {
