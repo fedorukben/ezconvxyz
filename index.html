@@ -484,23 +484,23 @@
         const conversions = {
             'image/png': {
                 formats: ['jpg', 'webp', 'gif'],
-                tools: ['circle-crop', 'resize', 'compress', 'remove-bg', 'rotate', 'flip', 'crop']
+                tools: ['circle-crop', 'resize', 'qr-generator', 'remove-bg', 'rotate', 'flip', 'crop', 'color-picker', 'color-replace', 'sharpen', 'blur', 'brightness', 'contrast', 'watermark', 'black-white', 'sepia']
             },
             'image/jpeg': {
                 formats: ['png', 'webp', 'gif'],
-                tools: ['circle-crop', 'resize', 'compress', 'remove-bg', 'rotate', 'flip', 'crop']
+                tools: ['circle-crop', 'resize', 'qr-generator', 'remove-bg', 'rotate', 'flip', 'crop', 'color-picker', 'color-replace', 'sharpen', 'blur', 'brightness', 'contrast', 'watermark', 'black-white', 'sepia']
             },
             'image/gif': {
                 formats: ['png', 'jpg', 'webp'],
-                tools: ['circle-crop', 'resize', 'compress', 'remove-bg', 'rotate', 'flip', 'crop']
+                tools: ['circle-crop', 'resize', 'qr-generator', 'remove-bg', 'rotate', 'flip', 'crop', 'color-picker', 'color-replace', 'sharpen', 'blur', 'brightness', 'contrast', 'watermark', 'black-white', 'sepia']
             },
             'image/webp': {
                 formats: ['png', 'jpg', 'gif'],
-                tools: ['circle-crop', 'resize', 'compress', 'remove-bg', 'rotate', 'flip', 'crop']
+                tools: ['circle-crop', 'resize', 'qr-generator', 'remove-bg', 'rotate', 'flip', 'crop', 'color-picker', 'color-replace', 'sharpen', 'blur', 'brightness', 'contrast', 'watermark', 'black-white', 'sepia']
             },
             'heic': {
                 formats: ['png', 'jpg', 'webp', 'gif'],
-                tools: ['circle-crop', 'resize', 'compress', 'remove-bg', 'rotate', 'flip', 'crop']
+                tools: ['circle-crop', 'resize', 'qr-generator', 'remove-bg', 'rotate', 'flip', 'crop', 'color-picker', 'color-replace', 'sharpen', 'blur', 'brightness', 'contrast', 'watermark', 'black-white', 'sepia']
             },
             'audio/mp3': {
                 formats: ['wav']
@@ -941,56 +941,97 @@
         function getToolInfo(tool) {
             const tools = {
                 'circle-crop': {
-                    name: 'Circle Crop',
+                    name: 'Circle Cropper',
                     description: 'Transform your image into a perfect circle for avatars and profiles',
-                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" stroke-width="2"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2"/>
-                    </svg>`
+                    icon: `<img src="icons/circle-cropper.png" class="w-12 h-12" alt="Circle Cropper">`
                 },
                 'resize': {
-                    name: 'Resize Image',
+                    name: 'Image Rescaler',
                     description: 'Change image dimensions while maintaining aspect ratio',
-                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
-                    </svg>`
+                    icon: `<img src="icons/image-rescaler.png" class="w-12 h-12" alt="Image Rescaler">`
                 },
-                'compress': {
-                    name: 'Compress Image',
-                    description: 'Reduce file size while preserving visual quality',
-                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>`
+                'qr-generator': {
+                    name: 'QR Code Generator',
+                    description: 'Generate QR codes from text, URLs, or other data',
+                    icon: `<img src="icons/qr-code-generator.png" class="w-12 h-12" alt="QR Code Generator">`
                 },
                 'remove-bg': {
-                    name: 'Remove Background',
+                    name: 'Background Remover',
                     description: 'Automatically remove background from images',
-                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12c0 4.418-3.582 8-8 8s-8-3.582-8-8 3.582-8 8-8 8 3.582 8 8z" opacity="0.3"/>
-                    </svg>`
+                    icon: `<img src="icons/background-remover.png" class="w-12 h-12" alt="Background Remover">`
                 },
                 'rotate': {
-                    name: 'Rotate Image',
+                    name: 'Image Rotator',
                     description: 'Rotate image by 90°, 180°, or 270°',
-                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>`
+                    icon: `<img src="icons/image-rotator.png" class="w-12 h-12" alt="Image Rotator">`
                 },
                 'flip': {
-                    name: 'Flip Image',
+                    name: 'Image Flipper',
                     description: 'Flip image horizontally or vertically',
-                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                    </svg>`
+                    icon: `<img src="icons/image-flipper.png" class="w-12 h-12" alt="Image Flipper">`
                 },
                 'crop': {
-                    name: 'Crop Image',
+                    name: 'Square Cropper',
                     description: 'Crop image to custom dimensions and aspect ratios',
+                    icon: `<img src="icons/square-cropper.png" class="w-12 h-12" alt="Square Cropper">`
+                },
+                'color-picker': {
+                    name: 'Color Picker',
+                    description: 'Select any color from your image and get HEX, RGB values',
+                    icon: `<img src="icons/color-picker.png" class="w-12 h-12" alt="Color Picker">`
+                },
+                'color-replace': {
+                    name: 'Color Replacer',
+                    description: 'Replace one color with another throughout the image',
+                    icon: `<img src="icons/color-replacer.png" class="w-12 h-12" alt="Color Replacer">`
+                },
+                'sharpen': {
+                    name: 'Image Sharpener',
+                    description: 'Enhance image details and make edges more defined',
                     icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m0 0v8m0-8l-8 8"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>`
+                },
+                'blur': {
+                    name: 'Image Blurer',
+                    description: 'Apply blur effects to soften image details',
+                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>`
+                },
+                'brightness': {
+                    name: 'Brightness Adjuster',
+                    description: 'Adjust image brightness levels for better visibility',
+                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>`
+                },
+                'contrast': {
+                    name: 'Contrast Adjuster',
+                    description: 'Enhance or reduce image contrast for better definition',
+                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>`
+                },
+                'watermark': {
+                    name: 'Image Watermarker',
+                    description: 'Add text or logo watermarks to protect your images',
+                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>`
+                },
+                'black-white': {
+                    name: 'Black & White Filter',
+                    description: 'Convert images to classic black and white',
+                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>`
+                },
+                'sepia': {
+                    name: 'Sepia Filter',
+                    description: 'Apply vintage sepia tone effect to images',
+                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>`
                 }
             };
@@ -1097,6 +1138,24 @@
                     flipImage(currentFile);
                 } else if (tool === 'crop') {
                     cropImage(currentFile);
+                } else if (tool === 'color-picker') {
+                    colorPickerImage(currentFile);
+                } else if (tool === 'color-replace') {
+                    colorReplaceImage(currentFile);
+                } else if (tool === 'sharpen') {
+                    sharpenImage(currentFile);
+                } else if (tool === 'blur') {
+                    blurImage(currentFile);
+                } else if (tool === 'brightness') {
+                    adjustBrightness(currentFile);
+                } else if (tool === 'contrast') {
+                    adjustContrast(currentFile);
+                } else if (tool === 'watermark') {
+                    watermarkImage(currentFile);
+                } else if (tool === 'black-white') {
+                    blackAndWhiteImage(currentFile);
+                } else if (tool === 'sepia') {
+                    sepiaImage(currentFile);
                 }
             } catch (error) {
                 console.error('Tool error:', error);
@@ -1939,60 +1998,84 @@
         function cropImage(file) {
             const img = new Image();
             img.onload = () => {
-                // Create modal for crop options
+                // Create visual crop modal
                 const modal = document.createElement('div');
                 modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
                 modal.innerHTML = `
-                    <div class="glass-card rounded-3xl p-8 max-w-lg mx-4">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Crop Image</h3>
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">X Position</label>
-                                    <input type="number" id="cropX" value="0" min="0" max="${img.naturalWidth}" 
-                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <div class="glass-card rounded-3xl p-8 max-w-4xl mx-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Visual Crop Tool</h3>
+                        <div class="flex flex-col lg:flex-row gap-6">
+                            <!-- Image Preview with Crop Overlay -->
+                            <div class="flex-1">
+                                <div class="relative border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-100" style="max-height: 500px;">
+                                    <img id="cropPreviewImg" class="max-w-full max-h-full object-contain" style="display: block;">
+                                    <div id="cropOverlay" class="absolute inset-0 pointer-events-none">
+                                        <div id="cropSelection" class="absolute border-2 border-purple-500 bg-purple-500 bg-opacity-20" style="left: 10%; top: 10%; width: 80%; height: 80%;">
+                                            <div class="absolute -top-1 -left-1 w-3 h-3 bg-purple-500 border border-white cursor-nw-resize" data-handle="nw"></div>
+                                            <div class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-purple-500 border border-white cursor-n-resize" data-handle="n"></div>
+                                            <div class="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 border border-white cursor-ne-resize" data-handle="ne"></div>
+                                            <div class="absolute top-1/2 transform -translate-y-1/2 -left-1 w-3 h-3 bg-purple-500 border border-white cursor-w-resize" data-handle="w"></div>
+                                            <div class="absolute top-1/2 transform -translate-y-1/2 -right-1 w-3 h-3 bg-purple-500 border border-white cursor-e-resize" data-handle="e"></div>
+                                            <div class="absolute -bottom-1 -left-1 w-3 h-3 bg-purple-500 border border-white cursor-sw-resize" data-handle="sw"></div>
+                                            <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-purple-500 border border-white cursor-s-resize" data-handle="s"></div>
+                                            <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-purple-500 border border-white cursor-se-resize" data-handle="se"></div>
+                                        </div>
+                                    </div>
                                 </div>
+                                <p class="text-sm text-gray-600 mt-2 text-center">Drag the corners and edges to adjust the crop area</p>
+                            </div>
+                            
+                            <!-- Controls -->
+                            <div class="w-full lg:w-80 space-y-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Y Position</label>
-                                    <input type="number" id="cropY" value="0" min="0" max="${img.naturalHeight}" 
-                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Aspect Ratio</label>
+                                    <select id="aspectRatio" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                        <option value="free">Free</option>
+                                        <option value="1:1">1:1 (Square)</option>
+                                        <option value="4:3">4:3</option>
+                                        <option value="16:9">16:9</option>
+                                        <option value="3:2">3:2</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">X</label>
+                                        <input type="number" id="cropX" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Y</label>
+                                        <input type="number" id="cropY" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Width</label>
+                                        <input type="number" id="cropWidth" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Height</label>
+                                        <input type="number" id="cropHeight" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                    </div>
+                                </div>
+                                
+                                <div class="flex space-x-4 mt-6">
+                                    <button id="cropCancel" class="flex-1 py-3 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                                        Cancel
+                                    </button>
+                                    <button id="cropApply" class="flex-1 py-3 px-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg hover:opacity-90 transition-opacity">
+                                        Crop
+                                    </button>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Width</label>
-                                    <input type="number" id="cropWidth" value="${img.naturalWidth}" min="1" max="${img.naturalWidth}" 
-                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Height</label>
-                                    <input type="number" id="cropHeight" value="${img.naturalHeight}" min="1" max="${img.naturalHeight}" 
-                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Aspect Ratio</label>
-                                <select id="aspectRatio" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
-                                    <option value="free">Free</option>
-                                    <option value="1:1">1:1 (Square)</option>
-                                    <option value="4:3">4:3</option>
-                                    <option value="16:9">16:9</option>
-                                    <option value="3:2">3:2</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="flex space-x-4 mt-6">
-                            <button id="cropCancel" class="flex-1 py-3 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                                Cancel
-                            </button>
-                            <button id="cropApply" class="flex-1 py-3 px-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg hover:opacity-90 transition-opacity">
-                                Crop
-                            </button>
                         </div>
                     </div>
                 `;
                 document.body.appendChild(modal);
 
+                const previewImg = modal.querySelector('#cropPreviewImg');
+                const cropSelection = modal.querySelector('#cropSelection');
                 const cropX = modal.querySelector('#cropX');
                 const cropY = modal.querySelector('#cropY');
                 const cropWidth = modal.querySelector('#cropWidth');
@@ -2001,30 +2084,186 @@
                 const cancelBtn = modal.querySelector('#cropCancel');
                 const applyBtn = modal.querySelector('#cropApply');
 
-                // Update max values when width/height change
-                const updateMaxValues = () => {
-                    const maxX = img.naturalWidth - parseInt(cropWidth.value);
-                    const maxY = img.naturalHeight - parseInt(cropHeight.value);
-                    cropX.max = Math.max(0, maxX);
-                    cropY.max = Math.max(0, maxY);
+                // Set up image preview
+                previewImg.src = URL.createObjectURL(file);
+                
+                let isDragging = false;
+                let dragHandle = null;
+                let startX, startY, startLeft, startTop, startWidth, startHeight;
+                let currentAspectRatio = null;
+
+                // Initialize crop area
+                const initCropArea = () => {
+                    const imgRect = previewImg.getBoundingClientRect();
+                    const containerRect = previewImg.parentElement.getBoundingClientRect();
+                    
+                    const scaleX = imgRect.width / img.naturalWidth;
+                    const scaleY = imgRect.height / img.naturalHeight;
+                    
+                    const cropLeft = 0.1 * imgRect.width;
+                    const cropTop = 0.1 * imgRect.height;
+                    const cropWidth = 0.8 * imgRect.width;
+                    const cropHeight = 0.8 * imgRect.height;
+                    
+                    cropSelection.style.left = cropLeft + 'px';
+                    cropSelection.style.top = cropTop + 'px';
+                    cropSelection.style.width = cropWidth + 'px';
+                    cropSelection.style.height = cropHeight + 'px';
+                    
+                    updateCropInputs();
                 };
 
-                cropWidth.addEventListener('input', updateMaxValues);
-                cropHeight.addEventListener('input', updateMaxValues);
+                const updateCropInputs = () => {
+                    const imgRect = previewImg.getBoundingClientRect();
+                    const scaleX = img.naturalWidth / imgRect.width;
+                    const scaleY = img.naturalHeight / imgRect.height;
+                    
+                    const left = parseFloat(cropSelection.style.left) * scaleX;
+                    const top = parseFloat(cropSelection.style.top) * scaleY;
+                    const width = parseFloat(cropSelection.style.width) * scaleX;
+                    const height = parseFloat(cropSelection.style.height) * scaleY;
+                    
+                    cropX.value = Math.round(left);
+                    cropY.value = Math.round(top);
+                    cropWidth.value = Math.round(width);
+                    cropHeight.value = Math.round(height);
+                };
 
-                // Apply aspect ratio
-                aspectRatio.addEventListener('change', () => {
-                    const ratio = aspectRatio.value;
-                    if (ratio !== 'free') {
-                        const [w, h] = ratio.split(':').map(Number);
+                const updateCropSelection = () => {
+                    const imgRect = previewImg.getBoundingClientRect();
+                    const scaleX = imgRect.width / img.naturalWidth;
+                    const scaleY = imgRect.height / img.naturalHeight;
+                    
+                    const left = parseInt(cropX.value) * scaleX;
+                    const top = parseInt(cropY.value) * scaleY;
+                    const width = parseInt(cropWidth.value) * scaleX;
+                    const height = parseInt(cropHeight.value) * scaleY;
+                    
+                    cropSelection.style.left = left + 'px';
+                    cropSelection.style.top = top + 'px';
+                    cropSelection.style.width = width + 'px';
+                    cropSelection.style.height = height + 'px';
+                };
+
+                // Mouse events for dragging
+                const handleMouseDown = (e) => {
+                    if (e.target.dataset.handle) {
+                        isDragging = true;
+                        dragHandle = e.target.dataset.handle;
+                        startX = e.clientX;
+                        startY = e.clientY;
+                        startLeft = parseFloat(cropSelection.style.left);
+                        startTop = parseFloat(cropSelection.style.top);
+                        startWidth = parseFloat(cropSelection.style.width);
+                        startHeight = parseFloat(cropSelection.style.height);
+                        e.preventDefault();
+                    }
+                };
+
+                const handleMouseMove = (e) => {
+                    if (!isDragging) return;
+                    
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
+                    
+                    let newLeft = startLeft;
+                    let newTop = startTop;
+                    let newWidth = startWidth;
+                    let newHeight = startHeight;
+                    
+                    switch (dragHandle) {
+                        case 'nw':
+                            newLeft = startLeft + deltaX;
+                            newTop = startTop + deltaY;
+                            newWidth = startWidth - deltaX;
+                            newHeight = startHeight - deltaY;
+                            break;
+                        case 'n':
+                            newTop = startTop + deltaY;
+                            newHeight = startHeight - deltaY;
+                            break;
+                        case 'ne':
+                            newTop = startTop + deltaY;
+                            newWidth = startWidth + deltaX;
+                            newHeight = startHeight - deltaY;
+                            break;
+                        case 'w':
+                            newLeft = startLeft + deltaX;
+                            newWidth = startWidth - deltaX;
+                            break;
+                        case 'e':
+                            newWidth = startWidth + deltaX;
+                            break;
+                        case 'sw':
+                            newLeft = startLeft + deltaX;
+                            newWidth = startWidth - deltaX;
+                            newHeight = startHeight + deltaY;
+                            break;
+                        case 's':
+                            newHeight = startHeight + deltaY;
+                            break;
+                        case 'se':
+                            newWidth = startWidth + deltaX;
+                            newHeight = startHeight + deltaY;
+                            break;
+                    }
+                    
+                    // Apply aspect ratio constraint
+                    if (currentAspectRatio && currentAspectRatio !== 'free') {
+                        const [w, h] = currentAspectRatio.split(':').map(Number);
                         const aspect = w / h;
                         
-                        if (cropWidth.value > cropHeight.value) {
-                            cropHeight.value = Math.round(cropWidth.value / aspect);
-                        } else {
-                            cropWidth.value = Math.round(cropHeight.value * aspect);
+                        if (dragHandle.includes('e') || dragHandle.includes('w')) {
+                            newHeight = newWidth / aspect;
+                        } else if (dragHandle.includes('s') || dragHandle.includes('n')) {
+                            newWidth = newHeight * aspect;
                         }
-                        updateMaxValues();
+                    }
+                    
+                    // Constrain to image bounds
+                    const imgRect = previewImg.getBoundingClientRect();
+                    newLeft = Math.max(0, Math.min(newLeft, imgRect.width - newWidth));
+                    newTop = Math.max(0, Math.min(newTop, imgRect.height - newHeight));
+                    newWidth = Math.max(50, Math.min(newWidth, imgRect.width - newLeft));
+                    newHeight = Math.max(50, Math.min(newHeight, imgRect.height - newTop));
+                    
+                    cropSelection.style.left = newLeft + 'px';
+                    cropSelection.style.top = newTop + 'px';
+                    cropSelection.style.width = newWidth + 'px';
+                    cropSelection.style.height = newHeight + 'px';
+                    
+                    updateCropInputs();
+                };
+
+                const handleMouseUp = () => {
+                    isDragging = false;
+                    dragHandle = null;
+                };
+
+                // Event listeners
+                cropSelection.addEventListener('mousedown', handleMouseDown);
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+                
+                cropX.addEventListener('input', updateCropSelection);
+                cropY.addEventListener('input', updateCropSelection);
+                cropWidth.addEventListener('input', updateCropSelection);
+                cropHeight.addEventListener('input', updateCropSelection);
+                
+                aspectRatio.addEventListener('change', () => {
+                    currentAspectRatio = aspectRatio.value;
+                    if (currentAspectRatio !== 'free') {
+                        const [w, h] = currentAspectRatio.split(':').map(Number);
+                        const aspect = w / h;
+                        const currentWidth = parseInt(cropWidth.value);
+                        const currentHeight = parseInt(cropHeight.value);
+                        
+                        if (currentWidth / currentHeight > aspect) {
+                            cropHeight.value = Math.round(currentWidth / aspect);
+                        } else {
+                            cropWidth.value = Math.round(currentHeight * aspect);
+                        }
+                        updateCropSelection();
                     }
                 });
 
@@ -2058,6 +2297,9 @@
                         modal.remove();
                     }, 'image/png');
                 });
+
+                // Initialize
+                previewImg.onload = initCropArea;
             };
             img.src = URL.createObjectURL(file);
         }
@@ -2119,6 +2361,883 @@
             link.download = filename;
             link.click();
             URL.revokeObjectURL(url);
+        }
+
+        function colorPickerImage(file) {
+            const img = new Image();
+            img.onload = () => {
+                // Create color picker modal
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="glass-card rounded-3xl p-8 max-w-2xl mx-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Color Picker</h3>
+                        <div class="flex flex-col lg:flex-row gap-6">
+                            <!-- Image Preview -->
+                            <div class="flex-1">
+                                <div class="relative border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-100" style="max-height: 400px;">
+                                    <img id="colorPickerImg" class="max-w-full max-h-full object-contain cursor-crosshair" style="display: block;">
+                                    <div id="colorPickerCursor" class="absolute w-4 h-4 border-2 border-white rounded-full pointer-events-none" style="display: none;"></div>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2 text-center">Click anywhere on the image to pick a color</p>
+                            </div>
+                            
+                            <!-- Color Results -->
+                            <div class="w-full lg:w-80 space-y-4">
+                                <div class="text-center">
+                                    <div id="colorPreview" class="w-24 h-24 mx-auto border-2 border-gray-300 rounded-lg mb-4" style="background-color: #ffffff;"></div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Selected Color</h4>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">HEX</label>
+                                        <div class="flex">
+                                            <input type="text" id="hexValue" class="flex-1 p-3 border border-gray-300 rounded-l-lg text-sm font-mono" value="#ffffff" readonly>
+                                            <button id="copyHex" class="px-4 py-3 bg-purple-500 text-white rounded-r-lg hover:bg-purple-600 transition-colors">
+                                                Copy
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">RGB</label>
+                                        <div class="flex">
+                                            <input type="text" id="rgbValue" class="flex-1 p-3 border border-gray-300 rounded-l-lg text-sm font-mono" value="rgb(255, 255, 255)" readonly>
+                                            <button id="copyRgb" class="px-4 py-3 bg-purple-500 text-white rounded-r-lg hover:bg-purple-600 transition-colors">
+                                                Copy
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">HSL</label>
+                                        <div class="flex">
+                                            <input type="text" id="hslValue" class="flex-1 p-3 border border-gray-300 rounded-l-lg text-sm font-mono" value="hsl(0, 0%, 100%)" readonly>
+                                            <button id="copyHsl" class="px-4 py-3 bg-purple-500 text-white rounded-r-lg hover:bg-purple-600 transition-colors">
+                                                Copy
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex space-x-4 mt-6">
+                                    <button id="colorPickerCancel" class="flex-1 py-3 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                const previewImg = modal.querySelector('#colorPickerImg');
+                const colorPreview = modal.querySelector('#colorPreview');
+                const hexValue = modal.querySelector('#hexValue');
+                const rgbValue = modal.querySelector('#rgbValue');
+                const hslValue = modal.querySelector('#hslValue');
+                const colorPickerCursor = modal.querySelector('#colorPickerCursor');
+                const cancelBtn = modal.querySelector('#colorPickerCancel');
+
+                // Set up image preview
+                previewImg.src = URL.createObjectURL(file);
+                
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                ctx.drawImage(img, 0, 0);
+
+                const rgbToHex = (r, g, b) => {
+                    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                };
+
+                const rgbToHsl = (r, g, b) => {
+                    r /= 255;
+                    g /= 255;
+                    b /= 255;
+                    const max = Math.max(r, g, b);
+                    const min = Math.min(r, g, b);
+                    let h, s, l = (max + min) / 2;
+
+                    if (max === min) {
+                        h = s = 0;
+                    } else {
+                        const d = max - min;
+                        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                        switch (max) {
+                            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                            case g: h = (b - r) / d + 2; break;
+                            case b: h = (r - g) / d + 4; break;
+                        }
+                        h /= 6;
+                    }
+                    return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
+                };
+
+                const updateColorDisplay = (r, g, b) => {
+                    const hex = rgbToHex(r, g, b);
+                    const hsl = rgbToHsl(r, g, b);
+                    
+                    colorPreview.style.backgroundColor = hex;
+                    hexValue.value = hex.toUpperCase();
+                    rgbValue.value = `rgb(${r}, ${g}, ${b})`;
+                    hslValue.value = `hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
+                };
+
+                const handleImageClick = (e) => {
+                    const rect = previewImg.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    // Scale coordinates to image dimensions
+                    const scaleX = img.naturalWidth / rect.width;
+                    const scaleY = img.naturalHeight / rect.height;
+                    
+                    const imageX = Math.floor(x * scaleX);
+                    const imageY = Math.floor(y * scaleY);
+                    
+                    // Get pixel color
+                    const imageData = ctx.getImageData(imageX, imageY, 1, 1);
+                    const [r, g, b] = imageData.data;
+                    
+                    updateColorDisplay(r, g, b);
+                    
+                    // Show cursor
+                    colorPickerCursor.style.left = (x - 8) + 'px';
+                    colorPickerCursor.style.top = (y - 8) + 'px';
+                    colorPickerCursor.style.display = 'block';
+                };
+
+                const handleMouseMove = (e) => {
+                    const rect = previewImg.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+                        colorPickerCursor.style.left = (x - 8) + 'px';
+                        colorPickerCursor.style.top = (y - 8) + 'px';
+                        colorPickerCursor.style.display = 'block';
+                    } else {
+                        colorPickerCursor.style.display = 'none';
+                    }
+                };
+
+                // Event listeners
+                previewImg.addEventListener('click', handleImageClick);
+                previewImg.addEventListener('mousemove', handleMouseMove);
+                previewImg.addEventListener('mouseleave', () => {
+                    colorPickerCursor.style.display = 'none';
+                });
+
+                // Copy buttons
+                document.getElementById('copyHex').addEventListener('click', () => {
+                    navigator.clipboard.writeText(hexValue.value);
+                    showSuccessMessage('HEX copied!');
+                });
+                document.getElementById('copyRgb').addEventListener('click', () => {
+                    navigator.clipboard.writeText(rgbValue.value);
+                    showSuccessMessage('RGB copied!');
+                });
+                document.getElementById('copyHsl').addEventListener('click', () => {
+                    navigator.clipboard.writeText(hslValue.value);
+                    showSuccessMessage('HSL copied!');
+                });
+
+                cancelBtn.addEventListener('click', () => {
+                    modal.remove();
+                    hideProcessing();
+                });
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        function colorReplaceImage(file) {
+            const img = new Image();
+            img.onload = () => {
+                // Create color replace modal
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="glass-card rounded-3xl p-8 max-w-2xl mx-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Color Replace Tool</h3>
+                        <div class="flex flex-col lg:flex-row gap-6">
+                            <!-- Image Preview -->
+                            <div class="flex-1">
+                                <div class="relative border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-100" style="max-height: 400px;">
+                                    <img id="colorReplaceImg" class="max-w-full max-h-full object-contain" style="display: block;">
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2 text-center">Preview of color replacement</p>
+                            </div>
+                            
+                            <!-- Controls -->
+                            <div class="w-full lg:w-80 space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">From Color</label>
+                                    <div class="flex space-x-2">
+                                        <input type="color" id="fromColorPicker" class="w-12 h-12 border border-gray-300 rounded-lg">
+                                        <input type="text" id="fromColorHex" placeholder="#ff0000" class="flex-1 p-3 border border-gray-300 rounded-lg text-sm font-mono">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">To Color</label>
+                                    <div class="flex space-x-2">
+                                        <input type="color" id="toColorPicker" class="w-12 h-12 border border-gray-300 rounded-lg">
+                                        <input type="text" id="toColorHex" placeholder="#00ff00" class="flex-1 p-3 border border-gray-300 rounded-lg text-sm font-mono">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tolerance (0-100)</label>
+                                    <input type="range" id="toleranceSlider" min="0" max="100" value="30" class="w-full">
+                                    <div class="text-center text-sm text-gray-600 mt-1">
+                                        <span id="toleranceValue">30</span>%
+                                    </div>
+                                </div>
+                                
+                                <div class="flex space-x-4 mt-6">
+                                    <button id="colorReplaceCancel" class="flex-1 py-3 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                                        Cancel
+                                    </button>
+                                    <button id="colorReplaceApply" class="flex-1 py-3 px-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg hover:opacity-90 transition-opacity">
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                const previewImg = modal.querySelector('#colorReplaceImg');
+                const fromColorPicker = modal.querySelector('#fromColorPicker');
+                const fromColorHex = modal.querySelector('#fromColorHex');
+                const toColorPicker = modal.querySelector('#toColorPicker');
+                const toColorHex = modal.querySelector('#toColorHex');
+                const toleranceSlider = modal.querySelector('#toleranceSlider');
+                const toleranceValue = modal.querySelector('#toleranceValue');
+                const cancelBtn = modal.querySelector('#colorReplaceCancel');
+                const applyBtn = modal.querySelector('#colorReplaceApply');
+
+                // Set up image preview
+                previewImg.src = URL.createObjectURL(file);
+                
+                const hexToRgb = (hex) => {
+                    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                    return result ? {
+                        r: parseInt(result[1], 16),
+                        g: parseInt(result[2], 16),
+                        b: parseInt(result[3], 16)
+                    } : null;
+                };
+
+                const rgbToHex = (r, g, b) => {
+                    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                };
+
+                const colorDistance = (r1, g1, b1, r2, g2, b2) => {
+                    return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
+                };
+
+                const updatePreview = () => {
+                    const fromHex = fromColorHex.value;
+                    const toHex = toColorHex.value;
+                    const tolerance = parseInt(toleranceSlider.value);
+                    
+                    if (!fromHex.match(/^#[0-9A-Fa-f]{6}$/) || !toHex.match(/^#[0-9A-Fa-f]{6}$/)) {
+                        return;
+                    }
+                    
+                    const fromRgb = hexToRgb(fromHex);
+                    const toRgb = hexToRgb(toHex);
+                    
+                    if (!fromRgb || !toRgb) return;
+                    
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    const maxDistance = Math.sqrt(3 * 255 * 255) * (tolerance / 100);
+                    
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+                        
+                        const distance = colorDistance(r, g, b, fromRgb.r, fromRgb.g, fromRgb.b);
+                        
+                        if (distance <= maxDistance) {
+                            data[i] = toRgb.r;
+                            data[i + 1] = toRgb.g;
+                            data[i + 2] = toRgb.b;
+                        }
+                    }
+                    
+                    ctx.putImageData(imageData, 0, 0);
+                    previewImg.src = canvas.toDataURL();
+                };
+
+                // Event listeners
+                fromColorPicker.addEventListener('input', () => {
+                    fromColorHex.value = fromColorPicker.value;
+                    updatePreview();
+                });
+                
+                fromColorHex.addEventListener('input', () => {
+                    if (fromColorHex.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+                        fromColorPicker.value = fromColorHex.value;
+                        updatePreview();
+                    }
+                });
+                
+                toColorPicker.addEventListener('input', () => {
+                    toColorHex.value = toColorPicker.value;
+                    updatePreview();
+                });
+                
+                toColorHex.addEventListener('input', () => {
+                    if (toColorHex.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+                        toColorPicker.value = toColorHex.value;
+                        updatePreview();
+                    }
+                });
+                
+                toleranceSlider.addEventListener('input', () => {
+                    toleranceValue.textContent = toleranceSlider.value;
+                    updatePreview();
+                });
+
+                cancelBtn.addEventListener('click', () => {
+                    modal.remove();
+                    hideProcessing();
+                });
+
+                applyBtn.addEventListener('click', () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    
+                    const fromRgb = hexToRgb(fromColorHex.value);
+                    const toRgb = hexToRgb(toColorHex.value);
+                    const tolerance = parseInt(toleranceSlider.value);
+                    const maxDistance = Math.sqrt(3 * 255 * 255) * (tolerance / 100);
+                    
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+                        
+                        const distance = colorDistance(r, g, b, fromRgb.r, fromRgb.g, fromRgb.b);
+                        
+                        if (distance <= maxDistance) {
+                            data[i] = toRgb.r;
+                            data[i + 1] = toRgb.g;
+                            data[i + 2] = toRgb.b;
+                        }
+                    }
+                    
+                    ctx.putImageData(imageData, 0, 0);
+                    
+                    canvas.toBlob((blob) => {
+                        downloadBlob(blob, 'color-replaced.png');
+                        showSuccessMessage('PNG');
+                        hideProcessing();
+                        modal.remove();
+                    }, 'image/png');
+                });
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        function sharpenImage(file) {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                ctx.drawImage(img, 0, 0);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                // Sharpen kernel
+                const kernel = [
+                    0, -1, 0,
+                    -1, 5, -1,
+                    0, -1, 0
+                ];
+                
+                const sharpenedData = applyConvolutionFilter(data, canvas.width, canvas.height, kernel);
+                
+                const newImageData = ctx.createImageData(canvas.width, canvas.height);
+                newImageData.data.set(sharpenedData);
+                
+                ctx.putImageData(newImageData, 0, 0);
+                
+                canvas.toBlob((blob) => {
+                    downloadBlob(blob, 'sharpened.png');
+                    showSuccessMessage('PNG');
+                    hideProcessing();
+                }, 'image/png');
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        function blurImage(file) {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                ctx.drawImage(img, 0, 0);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                // Gaussian blur kernel
+                const kernel = [
+                    1, 2, 1,
+                    2, 4, 2,
+                    1, 2, 1
+                ];
+                
+                const blurredData = applyConvolutionFilter(data, canvas.width, canvas.height, kernel, 16);
+                
+                const newImageData = ctx.createImageData(canvas.width, canvas.height);
+                newImageData.data.set(blurredData);
+                
+                ctx.putImageData(newImageData, 0, 0);
+                
+                canvas.toBlob((blob) => {
+                    downloadBlob(blob, 'blurred.png');
+                    showSuccessMessage('PNG');
+                    hideProcessing();
+                }, 'image/png');
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        function adjustBrightness(file) {
+            const img = new Image();
+            img.onload = () => {
+                // Create modal for brightness adjustment
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="glass-card rounded-3xl p-8 max-w-md mx-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Adjust Brightness</h3>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Brightness Level</label>
+                            <input type="range" id="brightnessSlider" min="-100" max="100" value="0" 
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>-100</span>
+                                <span id="brightnessValue">0</span>
+                                <span>+100</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-4">
+                            <button id="applyBrightness" class="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all duration-300">
+                                Apply
+                            </button>
+                            <button id="cancelBrightness" class="flex-1 bg-gray-500 text-white py-3 px-6 rounded-xl font-bold hover:bg-gray-600 transition-all duration-300">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                const brightnessSlider = document.getElementById('brightnessSlider');
+                const brightnessValue = document.getElementById('brightnessValue');
+                const applyBtn = document.getElementById('applyBrightness');
+                const cancelBtn = document.getElementById('cancelBrightness');
+                
+                brightnessSlider.addEventListener('input', () => {
+                    brightnessValue.textContent = brightnessSlider.value;
+                });
+                
+                applyBtn.addEventListener('click', () => {
+                    const brightness = parseInt(brightnessSlider.value);
+                    applyBrightnessFilter(img, brightness);
+                    modal.remove();
+                });
+                
+                cancelBtn.addEventListener('click', () => {
+                    modal.remove();
+                    hideProcessing();
+                });
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        function adjustContrast(file) {
+            const img = new Image();
+            img.onload = () => {
+                // Create modal for contrast adjustment
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="glass-card rounded-3xl p-8 max-w-md mx-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Adjust Contrast</h3>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Contrast Level</label>
+                            <input type="range" id="contrastSlider" min="-100" max="100" value="0" 
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>-100</span>
+                                <span id="contrastValue">0</span>
+                                <span>+100</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-4">
+                            <button id="applyContrast" class="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all duration-300">
+                                Apply
+                            </button>
+                            <button id="cancelContrast" class="flex-1 bg-gray-500 text-white py-3 px-6 rounded-xl font-bold hover:bg-gray-600 transition-all duration-300">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                const contrastSlider = document.getElementById('contrastSlider');
+                const contrastValue = document.getElementById('contrastValue');
+                const applyBtn = document.getElementById('applyContrast');
+                const cancelBtn = document.getElementById('cancelContrast');
+                
+                contrastSlider.addEventListener('input', () => {
+                    contrastValue.textContent = contrastSlider.value;
+                });
+                
+                applyBtn.addEventListener('click', () => {
+                    const contrast = parseInt(contrastSlider.value);
+                    applyContrastFilter(img, contrast);
+                    modal.remove();
+                });
+                
+                cancelBtn.addEventListener('click', () => {
+                    modal.remove();
+                    hideProcessing();
+                });
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        function watermarkImage(file) {
+            const img = new Image();
+            img.onload = () => {
+                // Create modal for watermark options
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="glass-card rounded-3xl p-8 max-w-md mx-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Add Watermark</h3>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Watermark Text</label>
+                            <input type="text" id="watermarkText" placeholder="Enter watermark text" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Opacity</label>
+                            <input type="range" id="opacitySlider" min="10" max="100" value="50" 
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>10%</span>
+                                <span id="opacityValue">50%</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Position</label>
+                            <select id="positionSelect" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="bottom-right">Bottom Right</option>
+                                <option value="bottom-left">Bottom Left</option>
+                                <option value="top-right">Top Right</option>
+                                <option value="top-left">Top Left</option>
+                                <option value="center">Center</option>
+                            </select>
+                        </div>
+                        <div class="flex space-x-4">
+                            <button id="applyWatermark" class="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all duration-300">
+                                Apply
+                            </button>
+                            <button id="cancelWatermark" class="flex-1 bg-gray-500 text-white py-3 px-6 rounded-xl font-bold hover:bg-gray-600 transition-all duration-300">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                const watermarkText = document.getElementById('watermarkText');
+                const opacitySlider = document.getElementById('opacitySlider');
+                const opacityValue = document.getElementById('opacityValue');
+                const positionSelect = document.getElementById('positionSelect');
+                const applyBtn = document.getElementById('applyWatermark');
+                const cancelBtn = document.getElementById('cancelWatermark');
+                
+                opacitySlider.addEventListener('input', () => {
+                    opacityValue.textContent = opacitySlider.value + '%';
+                });
+                
+                applyBtn.addEventListener('click', () => {
+                    const text = watermarkText.value.trim() || 'WATERMARK';
+                    const opacity = parseInt(opacitySlider.value) / 100;
+                    const position = positionSelect.value;
+                    applyWatermark(img, text, opacity, position);
+                    modal.remove();
+                });
+                
+                cancelBtn.addEventListener('click', () => {
+                    modal.remove();
+                    hideProcessing();
+                });
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        function blackAndWhiteImage(file) {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                ctx.drawImage(img, 0, 0);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+                    data[i] = gray;     // Red
+                    data[i + 1] = gray; // Green
+                    data[i + 2] = gray; // Blue
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+                
+                canvas.toBlob((blob) => {
+                    downloadBlob(blob, 'black-white.png');
+                    showSuccessMessage('PNG');
+                    hideProcessing();
+                }, 'image/png');
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        function sepiaImage(file) {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                ctx.drawImage(img, 0, 0);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    
+                    data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                    data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                    data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+                
+                canvas.toBlob((blob) => {
+                    downloadBlob(blob, 'sepia.png');
+                    showSuccessMessage('PNG');
+                    hideProcessing();
+                }, 'image/png');
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        // Helper functions for image processing
+        function applyConvolutionFilter(data, width, height, kernel, divisor = 1) {
+            const newData = new Uint8ClampedArray(data);
+            const kernelSize = Math.sqrt(kernel.length);
+            const half = Math.floor(kernelSize / 2);
+            
+            for (let y = half; y < height - half; y++) {
+                for (let x = half; x < width - half; x++) {
+                    let r = 0, g = 0, b = 0;
+                    
+                    for (let ky = 0; ky < kernelSize; ky++) {
+                        for (let kx = 0; kx < kernelSize; kx++) {
+                            const pixelY = y + ky - half;
+                            const pixelX = x + kx - half;
+                            const pixelIndex = (pixelY * width + pixelX) * 4;
+                            const weight = kernel[ky * kernelSize + kx];
+                            
+                            r += data[pixelIndex] * weight;
+                            g += data[pixelIndex + 1] * weight;
+                            b += data[pixelIndex + 2] * weight;
+                        }
+                    }
+                    
+                    const index = (y * width + x) * 4;
+                    newData[index] = Math.max(0, Math.min(255, r / divisor));
+                    newData[index + 1] = Math.max(0, Math.min(255, g / divisor));
+                    newData[index + 2] = Math.max(0, Math.min(255, b / divisor));
+                }
+            }
+            
+            return newData;
+        }
+
+        function applyBrightnessFilter(img, brightness) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = img.width;
+            canvas.height = img.height;
+            
+            ctx.drawImage(img, 0, 0);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = Math.max(0, Math.min(255, data[i] + brightness));
+                data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + brightness));
+                data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + brightness));
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            
+            canvas.toBlob((blob) => {
+                downloadBlob(blob, 'brightness-adjusted.png');
+                showSuccessMessage('PNG');
+                hideProcessing();
+            }, 'image/png');
+        }
+
+        function applyContrastFilter(img, contrast) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = img.width;
+            canvas.height = img.height;
+            
+            ctx.drawImage(img, 0, 0);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+            
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = Math.max(0, Math.min(255, factor * (data[i] - 128) + 128));
+                data[i + 1] = Math.max(0, Math.min(255, factor * (data[i + 1] - 128) + 128));
+                data[i + 2] = Math.max(0, Math.min(255, factor * (data[i + 2] - 128) + 128));
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            
+            canvas.toBlob((blob) => {
+                downloadBlob(blob, 'contrast-adjusted.png');
+                showSuccessMessage('PNG');
+                hideProcessing();
+            }, 'image/png');
+        }
+
+        function applyWatermark(img, text, opacity, position) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = img.width;
+            canvas.height = img.height;
+            
+            ctx.drawImage(img, 0, 0);
+            
+            // Set watermark properties
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+            ctx.strokeStyle = `rgba(0, 0, 0, ${opacity * 0.5})`;
+            ctx.lineWidth = 2;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Calculate position
+            let x, y;
+            const padding = 20;
+            
+            switch (position) {
+                case 'bottom-right':
+                    x = canvas.width - padding;
+                    y = canvas.height - padding;
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'bottom';
+                    break;
+                case 'bottom-left':
+                    x = padding;
+                    y = canvas.height - padding;
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'bottom';
+                    break;
+                case 'top-right':
+                    x = canvas.width - padding;
+                    y = padding;
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'top';
+                    break;
+                case 'top-left':
+                    x = padding;
+                    y = padding;
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'top';
+                    break;
+                case 'center':
+                default:
+                    x = canvas.width / 2;
+                    y = canvas.height / 2;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    break;
+            }
+            
+            // Draw watermark with stroke
+            ctx.strokeText(text, x, y);
+            ctx.fillText(text, x, y);
+            
+            canvas.toBlob((blob) => {
+                downloadBlob(blob, 'watermarked.png');
+                showSuccessMessage('PNG');
+                hideProcessing();
+            }, 'image/png');
         }
 
         function processText() {
