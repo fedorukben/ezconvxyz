@@ -141,6 +141,29 @@
     padding:.6rem 1.2rem;opacity:0;pointer-events:none;transition:all .25s;z-index:100;
   }
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* tool card icons — desaturated by default, full orange on hover */
+  .tool-icon{filter:grayscale(1) brightness(0.65);transition:filter .18s;}
+  .group:hover .tool-icon{filter:none;}
+
+  /* search bar */
+  #toolSearch{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;
+    text-transform:uppercase;outline:none;
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    padding:.72rem 1rem .72rem 2.6rem;width:100%;transition:border-color .15s;
+  }
+  #toolSearch::placeholder{color:var(--ink-faint);}
+  #toolSearch:focus{border-color:var(--acc);}
+  #toolSearch::-webkit-search-cancel-button{
+    -webkit-appearance:none;appearance:none;
+    width:14px;height:14px;cursor:pointer;opacity:.5;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e8e6e1' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M18 6L6 18M6 6l12 12'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  #toolSearch::-webkit-search-cancel-button:hover{opacity:1;}
+
+  /* no-results message */
+  #noResults{display:none;}
 </style>
 </head>
 <body>
@@ -178,7 +201,27 @@
       </p>
     </div>
 
-    <div id="toolGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 card-stagger"></div>
+    <!-- ── search + filter bar ── -->
+    <div class="mb-6 fade-in" style="animation-delay:.08s">
+      <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center mb-3">
+        <!-- search -->
+        <div class="relative flex-1 min-w-0">
+          <svg class="absolute pointer-events-none w-4 h-4" style="left:.75rem;top:50%;transform:translateY(-50%);color:var(--ink-faint)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input id="toolSearch" type="search" placeholder="Search tools…" autocomplete="off" spellcheck="false">
+        </div>
+        <!-- live count -->
+        <div id="filterCount" class="mono text-[11px] tracking-[.15em] self-center shrink-0" style="color:var(--ink-faint)"></div>
+      </div>
+      <!-- tag filter chips -->
+      <div id="tagFilters" class="flex flex-wrap gap-2"></div>
+    </div>
+
+    <div id="toolGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 card-stagger">
+      <div id="noResults" class="col-span-full py-12 text-center">
+        <div class="mono text-sm tracking-[.2em] uppercase mb-2" style="color:var(--ink-faint)">NO TOOLS MATCH</div>
+        <div class="mono text-[11px]" style="color:var(--ink-faint)">try a different search or clear the filter</div>
+      </div>
+    </div>
 
     <!-- extensibility note -->
     <div class="mt-12 border ticked p-6" style="border-color:var(--line); background:var(--panel)">
@@ -382,16 +425,17 @@ const ctx = { el, $, fmtBytes, toast, download, dataURLtoBlob, loadImage, baseNa
 
 /* ---------------- icons ---------------- */
 const ICONS = {
-  compress: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v6m0 0l-3-3m3 3l3-3M12 21v-6m0 0l-3 3m3 3l3-3M4 12h16"/></svg>`,
-  pdf2img:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="8" height="11"/><path d="M13 9h8v11h-8z"/><circle cx="16" cy="13" r="1.2"/><path d="M13 18l3-3 2.5 2.5L21 15"/></svg>`,
-  img2pdf:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="11" height="9"/><circle cx="7" cy="8" r="1.2"/><path d="M3 13l4-4 4 4M16 8h5v12h-9v-5"/></svg>`,
-  convert:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9a8 8 0 0114-3.3M20 15a8 8 0 01-14 3.3M18 2v4h-4M6 22v-4h4"/></svg>`,
-  scissors: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8.2 7.6L20 18M8.2 16.4L20 6"/></svg>`,
-  crop:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 2v15a2 2 0 002 2h13M2 7h15a2 2 0 012 2v13"/></svg>`,
-  file:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h8l5 5v15H6z"/><path d="M14 2v5h5"/></svg>`,
-  merge:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h5v16H4z"/><path d="M10 4h5v16h-5z"/><path d="M19 12h-4m2-3l3 3-3 3"/></svg>`,
-  bw:       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" stroke-width="1.6"/><path d="M12 3a9 9 0 010 18z" fill="currentColor" stroke="none"/></svg>`,
-  gray:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18"/><path d="M3 3l18 18M3 12h18M12 3v18M3 7.5h18M3 16.5h18" stroke-opacity=".45"/><rect x="3" y="3" width="9" height="9" fill="currentColor" fill-opacity=".5" stroke="none"/></svg>`,
+  compress:   "compress.svg",
+  pdf2img:    "pdf2img.svg",
+  img2pdf:    "img2pdf.svg",
+  convert:    "convert.svg",
+  scissors:   "bremove.svg",
+  crop:       "crop.svg",
+  file:       "file.svg",
+  merge:      "merge.svg",
+  bw:         "bw.svg",
+  gray:       "gray.svg",
+  circlecrop: "circle-crop.svg",
 };
 
 /* =====================================================================
@@ -1442,6 +1486,245 @@ TOOLS.push({
   }
 });
 
+/* ---------------------------------------------------------------
+   10 · CIRCLE CROP
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"circle-crop", name:"CIRCLE CROP", tag:"IMAGE",
+  blurb:"Crop a JPG or PNG into a perfect circle. Drag to move, edge to resize.",
+  icon: ICONS.circlecrop,
+  mount(root){
+    let img = null, srcFile = null;
+    // circle stored in NATURAL pixel coords
+    let circle = { cx: 0, cy: 0, r: 0 };
+    let drag = null; // null | "move" | "resize"
+    let dragStart = null;
+    let animFrame = null;
+
+    const dz = dropzone({ accept:"image/png,image/jpeg", label:"DROP A JPG / PNG" }, async files => {
+      srcFile = files[0];
+      if (!/image\/(png|jpe?g)/.test(srcFile.type)) return toast("Needs a jpg or png.");
+      try { img = await loadImage(srcFile); } catch(e){ return toast(e.message); }
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      setup();
+    });
+
+    const ws = workspace(); ws.classList.add("hidden");
+
+    // Controls
+    const dimInfo = el(`<div class="mono text-[12px] mb-1" style="color:var(--acc)">—</div>`);
+    const dimLabel = el(`<div class="mono text-[10px] tracking-[.15em] uppercase mb-4" style="color:var(--ink-faint)">output diameter (px)</div>`);
+
+    const resetCircle = el(`<button class="btn w-full justify-center mb-2">RESET CIRCLE</button>`);
+    const dlPng = el(`<button class="btn btn-acc w-full justify-center mt-2">DOWNLOAD PNG</button>`);
+    const dlJpg = el(`<button class="btn w-full justify-center mt-2">DOWNLOAD JPG (white bg)</button>`);
+    const newBtn = el(`<button class="btn w-full justify-center mt-2">LOAD ANOTHER</button>`);
+    newBtn.addEventListener("click", () => { ws.classList.add("hidden"); dz.classList.remove("hidden"); });
+    resetCircle.addEventListener("click", () => { if (img) setup(); });
+
+    const hint = el(`<div class="mono text-[10px] leading-relaxed mt-4 pt-3 border-t" style="color:var(--ink-faint); border-color:var(--line-soft)">
+      Drag inside the circle to move it.<br>
+      Drag the edge handle to resize.<br>
+      PNG preserves transparency outside the circle.
+    </div>`);
+
+    ws.panel.append(panelHeading("circle"), dimInfo, dimLabel, resetCircle, dlPng, dlJpg, newBtn, hint);
+
+    // Stage: preview canvas
+    const canvas = document.createElement("canvas");
+    canvas.className = "max-w-full block";
+    canvas.style.maxHeight = "540px";
+    canvas.style.cursor = "crosshair";
+    const stageWrap = el(`<div>
+      <div class="mono text-[11px] tracking-[.15em] uppercase mb-3" style="color:var(--ink-faint)">drag to move · drag edge handle to resize</div>
+      <div class="checker p-3 inline-block max-w-full"></div>
+    </div>`);
+    stageWrap.querySelector(".checker").appendChild(canvas);
+    ws.stage.appendChild(stageWrap);
+
+    const cx = canvas.getContext("2d", { willReadFrequently: false });
+
+    function sf(){ return canvas.width / canvas.clientWidth; }   // natural→display scale
+
+    function setup(){
+      canvas.width  = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const r = Math.round(Math.min(canvas.width, canvas.height) * 0.42);
+      circle = { cx: Math.round(canvas.width  / 2),
+                 cy: Math.round(canvas.height / 2),
+                 r };
+      scheduleDraw();
+    }
+
+    function scheduleDraw(){
+      if (animFrame) cancelAnimationFrame(animFrame);
+      animFrame = requestAnimationFrame(draw);
+    }
+
+    function draw(){
+      const W = canvas.width, H = canvas.height;
+      // 1. base image
+      cx.clearRect(0,0,W,H);
+      cx.drawImage(img,0,0);
+
+      // 2. dark overlay with circle hole (use offscreen canvas trick)
+      const ov = document.createElement("canvas");
+      ov.width = W; ov.height = H;
+      const oc = ov.getContext("2d");
+      oc.fillStyle = "rgba(10,11,14,.68)";
+      oc.fillRect(0,0,W,H);
+      oc.globalCompositeOperation = "destination-out";
+      oc.beginPath();
+      oc.arc(circle.cx, circle.cy, circle.r, 0, Math.PI*2);
+      oc.fill();
+      cx.drawImage(ov,0,0);
+
+      // 3. dashed circle border
+      cx.save();
+      cx.strokeStyle = "#ff7a1a";
+      cx.lineWidth = Math.max(1.5, 2 * sf());
+      cx.setLineDash([Math.max(6, 8 * sf()), Math.max(3, 4 * sf())]);
+      cx.beginPath();
+      cx.arc(circle.cx, circle.cy, circle.r, 0, Math.PI*2);
+      cx.stroke();
+      cx.restore();
+
+      // 4. four resize handles (N, E, S, W)
+      const handles = [
+        [circle.cx + circle.r, circle.cy],
+        [circle.cx - circle.r, circle.cy],
+        [circle.cx, circle.cy - circle.r],
+        [circle.cx, circle.cy + circle.r],
+      ];
+      const hr = Math.max(6, 8 * sf());
+      handles.forEach(([hx, hy]) => {
+        cx.save();
+        cx.fillStyle = "#ff7a1a";
+        cx.beginPath(); cx.arc(hx, hy, hr, 0, Math.PI*2); cx.fill();
+        cx.strokeStyle = "#141519";
+        cx.lineWidth = Math.max(1, 2 * sf());
+        cx.setLineDash([]);
+        cx.stroke();
+        cx.restore();
+      });
+
+      // 5. crosshair at centre (subtle)
+      cx.save();
+      cx.strokeStyle = "rgba(255,122,26,0.4)";
+      cx.lineWidth = Math.max(1, 1.5 * sf());
+      cx.setLineDash([Math.max(3, 4*sf()), Math.max(2, 3*sf())]);
+      const cl = Math.max(10, 14*sf());
+      cx.beginPath();
+      cx.moveTo(circle.cx - cl, circle.cy); cx.lineTo(circle.cx + cl, circle.cy);
+      cx.moveTo(circle.cx, circle.cy - cl); cx.lineTo(circle.cx, circle.cy + cl);
+      cx.stroke();
+      cx.restore();
+
+      dimInfo.textContent = Math.round(circle.r * 2) + " × " + Math.round(circle.r * 2) + " px";
+    }
+
+    // ---- pointer interaction ----
+    const HANDLE_HIT = 16; // display px radius for hit-testing handles
+
+    function toNatural(ex, ey){
+      const r = canvas.getBoundingClientRect();
+      const s = sf();
+      return { x: (ex - r.left) * s, y: (ey - r.top) * s };
+    }
+
+    function nearHandle(nx, ny){
+      const handles = [
+        [circle.cx + circle.r, circle.cy],
+        [circle.cx - circle.r, circle.cy],
+        [circle.cx, circle.cy - circle.r],
+        [circle.cx, circle.cy + circle.r],
+      ];
+      const hitNat = HANDLE_HIT * sf();
+      for (const [hx, hy] of handles){
+        const d = Math.hypot(nx - hx, ny - hy);
+        if (d <= hitNat + 4) return true;
+      }
+      return false;
+    }
+
+    function insideCircle(nx, ny){
+      return Math.hypot(nx - circle.cx, ny - circle.cy) < circle.r;
+    }
+
+    canvas.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      const { x, y } = toNatural(e.clientX, e.clientY);
+      if (nearHandle(x, y)){
+        drag = "resize";
+      } else if (insideCircle(x, y)){
+        drag = "move";
+      } else {
+        return;
+      }
+      dragStart = { x, y, circle: { ...circle } };
+      canvas.setPointerCapture(e.pointerId);
+      canvas.style.cursor = drag === "resize" ? "ew-resize" : "grabbing";
+    });
+
+    canvas.addEventListener("pointermove", e => {
+      if (!drag){ 
+        const { x, y } = toNatural(e.clientX, e.clientY);
+        if (nearHandle(x, y)) canvas.style.cursor = "ew-resize";
+        else if (insideCircle(x, y)) canvas.style.cursor = "grab";
+        else canvas.style.cursor = "crosshair";
+        return;
+      }
+      const { x, y } = toNatural(e.clientX, e.clientY);
+      const dx = x - dragStart.x, dy = y - dragStart.y;
+      const b0 = dragStart.circle;
+      const W = canvas.width, H = canvas.height;
+
+      if (drag === "move"){
+        circle.cx = Math.max(circle.r, Math.min(W - circle.r, b0.cx + dx));
+        circle.cy = Math.max(circle.r, Math.min(H - circle.r, b0.cy + dy));
+      } else {
+        // radius = distance from centre to pointer
+        const newR = Math.round(Math.hypot(x - b0.cx, y - b0.cy));
+        const minR = 12;
+        const maxR = Math.min(b0.cx, W - b0.cx, b0.cy, H - b0.cy);
+        circle.r = Math.max(minR, Math.min(maxR, newR));
+      }
+      scheduleDraw();
+    });
+
+    canvas.addEventListener("pointerup", () => {
+      drag = null; dragStart = null;
+      canvas.style.cursor = "crosshair";
+    });
+
+    // ---- export ----
+    function exportCircle(mime, ext){
+      if (!img) return;
+      const side = Math.ceil(circle.r * 2);
+      const outCanvas = document.createElement("canvas");
+      outCanvas.width = outCanvas.height = side;
+      const oc = outCanvas.getContext("2d");
+      if (mime === "image/jpeg"){ oc.fillStyle = "#fff"; oc.fillRect(0,0,side,side); }
+      oc.save();
+      oc.beginPath();
+      oc.arc(side/2, side/2, circle.r, 0, Math.PI*2);
+      oc.clip();
+      // draw the relevant portion of the source image
+      oc.drawImage(img,
+        circle.cx - circle.r, circle.cy - circle.r, side, side,
+        0, 0, side, side);
+      oc.restore();
+      download(dataURLtoBlob(outCanvas.toDataURL(mime, .92)),
+               baseName(srcFile.name) + "_circle." + ext);
+    }
+
+    dlPng.addEventListener("click", () => exportCircle("image/png",  "png"));
+    dlJpg.addEventListener("click", () => exportCircle("image/jpeg", "jpg"));
+
+    root.append(dz, ws);
+  }
+});
+
 /* =====================================================================
    SHELL — grid + routing (generated from the registry)
    ===================================================================== */
@@ -1449,25 +1732,91 @@ TOOLS.push({
 const homeEl = $("#home"), toolViewEl = $("#toolView"),
       toolRoot = $("#toolRoot"), toolTitle = $("#toolTitle"), toolBlurb = $("#toolBlurb");
 
+/* ---- filter state (persists across tool navigation) ---- */
+let _query = "";
+let _tag   = "ALL";
+let _cards = []; // [{ tool, el }]
+
+/* strip HTML entities for plain-text searching */
+function stripEntities(s){ return s.replace(/&[a-zA-Z]+;|&#\d+;/g," "); }
+
+function filterHome(){
+  const q = _query.toLowerCase().trim();
+  let visible = 0;
+  _cards.forEach(({ tool: t, el: card }) => {
+    const nameText  = stripEntities(t.name).toLowerCase();
+    const blurbText = t.blurb.toLowerCase();
+    const tagText   = t.tag.toLowerCase();
+    const matchQ   = !q || nameText.includes(q) || blurbText.includes(q) || tagText.includes(q);
+    const matchTag = _tag === "ALL" || t.tag === _tag;
+    const show = matchQ && matchTag;
+    card.style.display = show ? "" : "none";
+    if (show) visible++;
+  });
+  /* no-results state */
+  const noRes = $("#noResults");
+  if (noRes) noRes.style.display = visible === 0 ? "" : "none";
+  /* live count */
+  const countEl = $("#filterCount");
+  if (countEl){
+    if (q || _tag !== "ALL"){
+      countEl.textContent = visible + " / " + TOOLS.length + " tools";
+    } else {
+      countEl.textContent = "";
+    }
+  }
+}
+
 function renderHome(){
-  const grid = $("#toolGrid");
-  grid.innerHTML = "";
+  const grid       = $("#toolGrid");
+  const tagBar     = $("#tagFilters");
+  const searchEl   = $("#toolSearch");
+
+  /* ---- build tag chips (derived from registry) ---- */
+  const tags = ["ALL", ...[...new Set(TOOLS.map(t => t.tag))].sort()];
+  tagBar.innerHTML = "";
+  tags.forEach(tag => {
+    const c = el(`<button class="chip ${tag === _tag ? "on" : ""}">${tag}</button>`);
+    c.addEventListener("click", () => {
+      _tag = tag;
+      [...tagBar.children].forEach(x => x.classList.remove("on"));
+      c.classList.add("on");
+      filterHome();
+    });
+    tagBar.appendChild(c);
+  });
+
+  /* ---- build cards (once; filter shows/hides them) ---- */
+  // remove existing cards but keep #noResults
+  [...grid.children].forEach(ch => { if (ch.id !== "noResults") ch.remove(); });
+  _cards = [];
   TOOLS.forEach(t => {
     const card = el(`
       <button class="ticked border p-5 text-left transition-colors group"
               style="border-color:var(--line); background:var(--panel)">
         <div class="flex items-start justify-between mb-6">
-          <span class="w-8 h-8 block transition-colors" style="color:var(--ink-dim)">${t.icon}</span>
+          <img src="icons/${t.icon}" class="w-8 h-8 tool-icon" alt="${t.name}">
           <span class="mono text-[10px] tracking-[.2em] px-2 py-1 border" style="color:var(--ink-faint); border-color:var(--line-soft)">${t.tag}</span>
         </div>
         <div class="display font-bold text-2xl tracking-wide mb-1 group-hover:translate-x-1 transition-transform">${t.name}</div>
         <div class="text-[13px] leading-snug" style="color:var(--ink-dim)">${t.blurb}</div>
       </button>`);
-    card.addEventListener("mouseenter", () => $("span", card).style.color = "var(--acc)");
-    card.addEventListener("mouseleave", () => $("span", card).style.color = "var(--ink-dim)");
     card.addEventListener("click", () => openTool(t.id));
-    grid.appendChild(card);
+    // insert before #noResults so it stays at the end
+    grid.insertBefore(card, $("#noResults"));
+    _cards.push({ tool: t, el: card });
   });
+
+  /* ---- wire up search input (only once; value preserved) ---- */
+  searchEl.value = _query;
+  // replace to avoid duplicate listeners on repeated calls
+  const fresh = searchEl.cloneNode(true);
+  searchEl.parentNode.replaceChild(fresh, searchEl);
+  fresh.value = _query;
+  fresh.addEventListener("input", () => { _query = fresh.value; filterHome(); });
+  fresh.addEventListener("search",() => { _query = fresh.value; filterHome(); }); // clear btn
+
+  filterHome();
   $("#toolCount").textContent = TOOLS.length + " TOOLS MOUNTED";
 }
 
