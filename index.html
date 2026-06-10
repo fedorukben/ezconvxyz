@@ -129,6 +129,28 @@
   .card-stagger > *:nth-child(7){animation-delay:.26s}
   .card-stagger > *:nth-child(8){animation-delay:.30s}
   .card-stagger > *:nth-child(9){animation-delay:.34s}
+  .card-stagger > *:nth-child(10){animation-delay:.38s}
+  .card-stagger > *:nth-child(11){animation-delay:.41s}
+  .card-stagger > *:nth-child(12){animation-delay:.44s}
+  .card-stagger > *:nth-child(13){animation-delay:.47s}
+  .card-stagger > *:nth-child(14){animation-delay:.50s}
+  .card-stagger > *:nth-child(15){animation-delay:.53s}
+  .card-stagger > *:nth-child(16){animation-delay:.56s}
+  .card-stagger > *:nth-child(17){animation-delay:.59s}
+  .card-stagger > *:nth-child(18){animation-delay:.62s}
+  .card-stagger > *:nth-child(19){animation-delay:.65s}
+  .card-stagger > *:nth-child(20){animation-delay:.68s}
+
+  /* styled input/number field used by tools */
+  .field{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.05em;
+    padding:.55rem .75rem;border:1px solid var(--line);background:var(--panel-2);
+    color:var(--ink);outline:none;transition:border-color .15s;width:100%;
+    -moz-appearance:textfield;
+  }
+  .field:focus{border-color:var(--acc);}
+  .field::placeholder{color:var(--ink-faint);}
+  .field::-webkit-outer-spin-button,.field::-webkit-inner-spin-button{-webkit-appearance:none;}
 
   .dz.dragover{border-color:var(--acc) !important;background:var(--acc-soft) !important;}
   .spin{animation:spin 1s linear infinite;display:inline-block;}
@@ -420,6 +442,34 @@ function busy(text){
   return el(`<div class="mono text-[12px] tracking-[.1em] py-8 text-center" style="color:var(--ink-dim)"><span class="spin mr-2" style="color:var(--acc)">◌</span>${text}</div>`);
 }
 
+/* labelled number input */
+function numField({ label, min, max, step, value, unit="" }){
+  const wrap = el(`<div class="mb-4">
+    <div class="mono text-[11px] tracking-[.15em] uppercase mb-1.5" style="color:var(--ink-dim)">${label}</div>
+    <div class="flex items-center gap-2">
+      <input type="number" min="${min}" max="${max}" step="${step}" value="${value}" class="field flex-1 min-w-0">
+      ${unit ? `<span class="mono text-[11px] shrink-0" style="color:var(--ink-faint)">${unit}</span>` : ""}
+    </div>
+  </div>`);
+  const input = $("input", wrap);
+  wrap.value   = () => parseFloat(input.value) || 0;
+  wrap.setValue = v  => { input.value = v; };
+  wrap.onchange = fn => input.addEventListener("input", () => fn(wrap.value()));
+  return wrap;
+}
+
+/* labelled text input */
+function textField({ label, placeholder="", value="" }){
+  const wrap = el(`<div class="mb-4">
+    <div class="mono text-[11px] tracking-[.15em] uppercase mb-1.5" style="color:var(--ink-dim)">${label}</div>
+    <input type="text" placeholder="${placeholder}" value="${value}" class="field w-full">
+  </div>`);
+  const input = $("input", wrap);
+  wrap.value   = () => input.value;
+  wrap.onchange = fn => input.addEventListener("input", () => fn(input.value));
+  return wrap;
+}
+
 const ctx = { el, $, fmtBytes, toast, download, dataURLtoBlob, loadImage, baseName,
               dropzone, slider, chips, workspace, panelHeading, busy };
 
@@ -436,6 +486,18 @@ const ICONS = {
   bw:         "bw.svg",
   gray:       "gray.svg",
   circlecrop: "circle-crop.svg",
+  svg2img:    "svg2img.svg",
+  img2svg:    "img2svg.svg",
+  pdfsplit:   "pdfsplit.svg",
+  resize:     "resize.svg",
+  rotate:     "rotate.svg",
+  webp:       "webp.svg",
+  metadata:   "metadata.svg",
+  adjust:     "adjust.svg",
+  favicon:    "favicon.svg",
+  watermark:     "watermark.svg",
+  colorReplace:  "color-replace.svg",
+  colorPick:     "color-pick.svg",
 };
 
 /* =====================================================================
@@ -1722,6 +1784,1214 @@ TOOLS.push({
     dlJpg.addEventListener("click", () => exportCircle("image/jpeg", "jpg"));
 
     root.append(dz, ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   11 · SVG → IMAGE
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"svg-to-img", name:"SVG \u2192 IMAGE", tag:"CONVERT",
+  blurb:"Render an SVG file to PNG or JPG at any resolution.",
+  icon: ICONS.svg2img,
+  mount(root){
+    let svgText=null, srcFile=null, nW=800, nH=600;
+
+    const dz=dropzone({accept:".svg,image/svg+xml",label:"DROP AN SVG",sub:"svg · click to browse"}, async files=>{
+      srcFile=files[0];
+      if(!srcFile.name.toLowerCase().endsWith(".svg")&&srcFile.type!=="image/svg+xml")
+        return toast("Needs an .svg file.");
+      svgText=await srcFile.text();
+      const svgEl=new DOMParser().parseFromString(svgText,"image/svg+xml").querySelector("svg");
+      let w=parseFloat(svgEl?.getAttribute("width"))||0, h=parseFloat(svgEl?.getAttribute("height"))||0;
+      if(!w||!h){const vb=(svgEl?.getAttribute("viewBox")||"").trim().split(/[\s,]+/);w=parseFloat(vb[2])||800;h=parseFloat(vb[3])||600;}
+      nW=Math.round(w); nH=Math.round(h);
+      wF.setValue(nW); hF.setValue(nH);
+      info.textContent=`${srcFile.name} · ${nW}×${nH}`;
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      await renderPrev();
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+    const info=el(`<div class="mono text-[11px] mb-3 break-all" style="color:var(--ink-dim)"></div>`);
+    const fC=chips([{label:"PNG",value:"png"},{label:"JPG",value:"jpg"}],"png",v=>{q.style.display=v==="jpg"?"":"none";});
+    const q=slider({label:"JPG quality",min:.3,max:.95,step:.05,value:.9,fmt:v=>Math.round(v*100)+"%"});
+    q.style.display="none";
+    const wF=numField({label:"Width",min:1,max:8000,step:1,value:800,unit:"px"});
+    const hF=numField({label:"Height",min:1,max:8000,step:1,value:600,unit:"px"});
+    let arLock=true;
+    const arB=el(`<button class="btn w-full justify-center mb-3" style="border-color:var(--acc)">AR LOCK: ON</button>`);
+    arB.addEventListener("click",()=>{arLock=!arLock;arB.textContent="AR LOCK: "+(arLock?"ON":"OFF");arB.style.borderColor=arLock?"var(--acc)":"var(--line)";});
+    wF.onchange(v=>{if(arLock&&nW)hF.setValue(Math.round(v*nH/nW));});
+    hF.onchange(v=>{if(arLock&&nH)wF.setValue(Math.round(v*nW/nH));});
+    const dlB=el(`<button class="btn btn-acc w-full justify-center mt-2">EXPORT IMAGE</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD ANOTHER</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");});
+    const fLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2" style="color:var(--ink-dim)">Format</div>`);
+    ws.panel.append(panelHeading("settings"),info,fLbl,fC,el(`<div class="h-4"></div>`),q,wF,hF,arB,dlB,rstB);
+
+    const pC=document.createElement("canvas");
+    pC.className="max-w-full block"; pC.style.maxHeight="520px";
+    const si=el(`<div><div class="mono text-[11px] tracking-[.15em] uppercase mb-3" style="color:var(--ink-faint)">rendered preview</div><div class="checker p-3 inline-block max-w-full"></div></div>`);
+    si.querySelector(".checker").appendChild(pC);
+    ws.stage.appendChild(si);
+
+    function renderPrev(){
+      if(!svgText)return Promise.resolve();
+      const w=Math.max(1,wF.value()||nW), h=Math.max(1,hF.value()||nH);
+      const blob=new Blob([svgText],{type:"image/svg+xml"});
+      const url=URL.createObjectURL(blob);
+      return new Promise(res=>{
+        const img=new Image();
+        img.onload=()=>{pC.width=w;pC.height=h;const cc=pC.getContext("2d");cc.clearRect(0,0,w,h);if(fC.value()==="jpg"){cc.fillStyle="#fff";cc.fillRect(0,0,w,h);}cc.drawImage(img,0,0,w,h);URL.revokeObjectURL(url);res();};
+        img.onerror=()=>{toast("SVG render failed.");URL.revokeObjectURL(url);res();};
+        img.src=url;
+      });
+    }
+
+    dlB.addEventListener("click",async()=>{
+      if(!svgText)return;
+      dlB.disabled=true;
+      await renderPrev();
+      const fmt=fC.value(),mime=fmt==="png"?"image/png":"image/jpeg";
+      download(dataURLtoBlob(pC.toDataURL(mime,q.value())),baseName(srcFile.name)+"."+fmt);
+      dlB.disabled=false;
+    });
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   12 · IMAGE → SVG
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"img-to-svg", name:"IMAGE \u2192 SVG", tag:"CONVERT",
+  blurb:"Embed a JPG/PNG/WEBP inside an SVG wrapper for design tools.",
+  icon: ICONS.img2svg,
+  mount(root){
+    let files=[];
+    const dz=dropzone({accept:"image/png,image/jpeg,image/webp",multiple:true,label:"DROP IMAGES",sub:"jpg · png · webp · multiple"}, fs=>{
+      files=fs.filter(f=>/image\/(png|jpe?g|webp)/.test(f.type));
+      if(!files.length)return toast("No supported images found.");
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      info.textContent=`${files.length} file${files.length>1?"s":""} loaded`;
+      grid.innerHTML=""; outputs=[]; zipB.disabled=true;
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+    const info=el(`<div class="mono text-[11px] mb-3" style="color:var(--ink-dim)"></div>`);
+    const note=el(`<div class="mono text-[10px] leading-relaxed mb-4 p-2 border" style="border-color:var(--line-soft);color:var(--ink-faint)">Output SVGs embed the raster image as base64 — not vector-traced. Ideal for design tools that require SVG input.</div>`);
+    const goB=el(`<button class="btn btn-acc w-full justify-center mt-2">CONVERT ALL</button>`);
+    const zipB=el(`<button class="btn w-full justify-center mt-2" disabled>DOWNLOAD ZIP</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD OTHERS</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");});
+    ws.panel.append(panelHeading("settings"),info,note,goB,zipB,rstB);
+
+    const grid=el(`<div class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>`);
+    ws.stage.appendChild(grid);
+    let outputs=[];
+
+    goB.addEventListener("click",async()=>{
+      grid.innerHTML=""; outputs=[];
+      const prog=busy("converting…"); ws.stage.appendChild(prog);
+      for(const f of files){
+        try{
+          const img=await loadImage(f);
+          const w=img.naturalWidth, h=img.naturalHeight;
+          const c=document.createElement("canvas"); c.width=w; c.height=h;
+          c.getContext("2d").drawImage(img,0,0);
+          const b64=c.toDataURL("image/png").split(",")[1];
+          const svg=`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">\n  <image width="${w}" height="${h}" href="data:image/png;base64,${b64}"/>\n</svg>`;
+          const blob=new Blob([svg],{type:"image/svg+xml"});
+          const name=baseName(f.name)+".svg";
+          outputs.push({blob,name});
+          const cell=el(`<div class="border p-2 ticked" style="border-color:var(--line-soft);background:var(--panel-2)">
+            <div class="checker mb-2"><img class="w-full block" alt=""></div>
+            <div class="mono text-[10px] truncate mb-1" style="color:var(--ink-faint)">${name}</div>
+            <div class="flex justify-between items-center gap-2">
+              <span class="mono text-[10px]" style="color:var(--ink-dim)">${fmtBytes(blob.size)}</span>
+              <button class="btn btn-sm">SAVE</button>
+            </div>
+          </div>`);
+          $("img",cell).src=img.src;
+          $("button",cell).addEventListener("click",()=>download(blob,name));
+          grid.insertBefore(cell,prog);
+        }catch(e){toast("Failed: "+f.name);}
+        await new Promise(r=>setTimeout(r));
+      }
+      prog.remove(); zipB.disabled=outputs.length<2;
+      toast(`${outputs.length} SVG${outputs.length>1?"s":""} created.`);
+    });
+
+    zipB.addEventListener("click",async()=>{
+      const zip=new JSZip(); outputs.forEach(o=>zip.file(o.name,o.blob));
+      download(await zip.generateAsync({type:"blob"}),"ezconv_svgs.zip");
+    });
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   13 · PDF SPLIT
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"pdf-split", name:"PDF SPLIT", tag:"PDF",
+  blurb:"Burst every page or extract a custom range from a PDF.",
+  icon: ICONS.pdfsplit,
+  mount(root){
+    let pdfDoc=null, srcFile=null;
+
+    const dz=dropzone({accept:"application/pdf",label:"DROP A PDF"}, async files=>{
+      srcFile=files[0];
+      if(srcFile.type!=="application/pdf"&&!srcFile.name.toLowerCase().endsWith(".pdf"))return toast("Needs a PDF.");
+      const prog=busy("loading & thumbnailing…"); root.appendChild(prog);
+      try{ pdfDoc=await pdfjsLib.getDocument({data:await srcFile.arrayBuffer()}).promise; }
+      catch(e){ prog.remove(); return toast("Could not open PDF: "+e.message); }
+      info.textContent=`${srcFile.name} · ${pdfDoc.numPages} page${pdfDoc.numPages>1?"s":""}`;
+      grid.innerHTML="";
+      for(let p=1;p<=pdfDoc.numPages;p++){
+        prog.lastChild.textContent=` thumbnailing ${p}/${pdfDoc.numPages}`;
+        const page=await pdfDoc.getPage(p);
+        const vp=page.getViewport({scale:.28});
+        const c=document.createElement("canvas"); c.width=vp.width; c.height=vp.height;
+        await page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+        const cell=el(`<div class="border p-1.5 ticked" style="border-color:var(--line-soft);background:var(--panel-2)">
+          <div class="checker mb-1"><img class="w-full block" alt="p${p}"></div>
+          <div class="mono text-[10px] text-center" style="color:var(--ink-faint)">P${p}</div>
+        </div>`);
+        $("img",cell).src=c.toDataURL("image/jpeg",.6);
+        grid.appendChild(cell);
+        await new Promise(r=>setTimeout(r));
+      }
+      prog.remove(); dz.classList.add("hidden"); ws.classList.remove("hidden");
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+    const info=el(`<div class="mono text-[11px] mb-4 break-all" style="color:var(--ink-dim)"></div>`);
+    const modeChips=chips([{label:"BURST ALL",value:"burst"},{label:"RANGE",value:"range"}],"burst",v=>{
+      rangeWrap.style.display=v==="range"?"":"none";
+    });
+    const rangeWrap=el(`<div class="mt-3" style="display:none">
+      <div class="mono text-[11px] tracking-[.15em] uppercase mb-1.5" style="color:var(--ink-dim)">Page range</div>
+      <input type="text" class="field w-full mb-1" placeholder="e.g. 1-3, 5, 8-10" spellcheck="false">
+      <div class="mono text-[10px]" style="color:var(--ink-faint)">Blank = all pages.</div>
+    </div>`);
+    const rangeIn=$("input",rangeWrap);
+    const dlB=el(`<button class="btn btn-acc w-full justify-center mt-4">SPLIT / DOWNLOAD</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD ANOTHER</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");grid.innerHTML="";});
+    const mLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2" style="color:var(--ink-dim)">Mode</div>`);
+    ws.panel.append(panelHeading("settings"),info,mLbl,modeChips,rangeWrap,dlB,rstB);
+
+    const grid=el(`<div class="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2"></div>`);
+    const progWrap=el(`<div></div>`);
+    ws.stage.append(grid,progWrap);
+
+    function parseRange(str,max){
+      if(!str.trim())return Array.from({length:max},(_,i)=>i+1);
+      const pages=new Set();
+      str.split(",").forEach(part=>{
+        const s=part.trim().split("-").map(n=>parseInt(n.trim()));
+        if(isNaN(s[0]))return;
+        if(s.length===1){if(s[0]>=1&&s[0]<=max)pages.add(s[0]);}
+        else{for(let i=Math.max(1,s[0]);i<=Math.min(max,s[1]||s[0]);i++)pages.add(i);}
+      });
+      return [...pages].sort((a,b)=>a-b);
+    }
+
+    async function pageToImg(p){
+      const page=await pdfDoc.getPage(p);
+      const base=page.getViewport({scale:1});
+      const vp=page.getViewport({scale:2});
+      const c=document.createElement("canvas"); c.width=vp.width; c.height=vp.height;
+      const cc=c.getContext("2d"); cc.fillStyle="#fff"; cc.fillRect(0,0,c.width,c.height);
+      await page.render({canvasContext:cc,viewport:vp}).promise;
+      return{dataURL:c.toDataURL("image/jpeg",.9),w:base.width,h:base.height};
+    }
+
+    dlB.addEventListener("click",async()=>{
+      if(!pdfDoc)return;
+      dlB.disabled=true;
+      const mode=modeChips.value();
+      const prog=busy("splitting…"); progWrap.appendChild(prog);
+      try{
+        if(mode==="burst"){
+          const zip=new JSZip();
+          for(let p=1;p<=pdfDoc.numPages;p++){
+            prog.lastChild.textContent=` page ${p}/${pdfDoc.numPages}`;
+            const{dataURL,w,h}=await pageToImg(p);
+            const doc=new jsPDF({orientation:w>h?"l":"p",unit:"pt",format:[w,h]});
+            doc.addImage(dataURL,"JPEG",0,0,w,h);
+            zip.file(`${baseName(srcFile.name)}_p${String(p).padStart(2,"0")}.pdf`,doc.output("blob"));
+            await new Promise(r=>setTimeout(r));
+          }
+          download(await zip.generateAsync({type:"blob"}),baseName(srcFile.name)+"_burst.zip");
+          toast(`${pdfDoc.numPages} pages → ZIP`);
+        } else {
+          const pages=parseRange(rangeIn.value,pdfDoc.numPages);
+          if(!pages.length){toast("No valid pages in range.");dlB.disabled=false;prog.remove();return;}
+          let out=null;
+          for(let i=0;i<pages.length;i++){
+            prog.lastChild.textContent=` page ${pages[i]}/${pdfDoc.numPages}`;
+            const{dataURL,w,h}=await pageToImg(pages[i]);
+            const orient=w>h?"l":"p";
+            if(!out)out=new jsPDF({orientation:orient,unit:"pt",format:[w,h]});
+            else out.addPage([w,h],orient);
+            out.addImage(dataURL,"JPEG",0,0,w,h);
+            await new Promise(r=>setTimeout(r));
+          }
+          download(out.output("blob"),`${baseName(srcFile.name)}_extract.pdf`);
+          toast(`${pages.length} pages extracted.`);
+        }
+      }catch(e){toast("Split failed: "+e.message);}
+      prog.remove(); dlB.disabled=false;
+    });
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   14 · IMAGE RESIZE
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"img-resize", name:"IMAGE RESIZE", tag:"IMAGE",
+  blurb:"Scale to exact pixel dimensions with aspect-ratio lock.",
+  icon: ICONS.resize,
+  mount(root){
+    let img=null, srcFile=null;
+
+    const dz=dropzone({accept:"image/png,image/jpeg,image/webp",label:"DROP AN IMAGE"}, async files=>{
+      srcFile=files[0];
+      if(!/image\/(png|jpe?g|webp)/.test(srcFile.type))return toast("Needs jpg/png/webp.");
+      try{img=await loadImage(srcFile);}catch(e){return toast(e.message);}
+      wF.setValue(img.naturalWidth); hF.setValue(img.naturalHeight);
+      info.textContent=`${srcFile.name} · ${img.naturalWidth}×${img.naturalHeight}`;
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      updateHint();
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+    const info=el(`<div class="mono text-[11px] mb-4 break-all" style="color:var(--ink-dim)"></div>`);
+    const wF=numField({label:"Width",min:1,max:16000,step:1,value:800,unit:"px"});
+    const hF=numField({label:"Height",min:1,max:16000,step:1,value:600,unit:"px"});
+    let arLock=true;
+    const arB=el(`<button class="btn w-full justify-center mb-4" style="border-color:var(--acc)">AR LOCK: ON</button>`);
+    arB.addEventListener("click",()=>{arLock=!arLock;arB.textContent="AR LOCK: "+(arLock?"ON":"OFF");arB.style.borderColor=arLock?"var(--acc)":"var(--line)";});
+    wF.onchange(v=>{if(arLock&&img)hF.setValue(Math.round(v*img.naturalHeight/img.naturalWidth));updateHint();});
+    hF.onchange(v=>{if(arLock&&img)wF.setValue(Math.round(v*img.naturalWidth/img.naturalHeight));updateHint();});
+
+    const presLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2" style="color:var(--ink-dim)">Quick scale</div>`);
+    const presets=el(`<div class="flex gap-1.5 flex-wrap mb-4"></div>`);
+    [["25%",.25],["50%",.5],["75%",.75],["1×",1],["2×",2]].forEach(([lbl,m])=>{
+      const b=el(`<button class="btn btn-sm">${lbl}</button>`);
+      b.addEventListener("click",()=>{if(!img)return;wF.setValue(Math.round(img.naturalWidth*m));hF.setValue(Math.round(img.naturalHeight*m));updateHint();});
+      presets.appendChild(b);
+    });
+
+    const fLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2 mt-1" style="color:var(--ink-dim)">Output format</div>`);
+    const outFmt=chips([{label:"PNG",value:"png"},{label:"JPG",value:"jpg"},{label:"WEBP",value:"webp"}],"png");
+    const dlB=el(`<button class="btn btn-acc w-full justify-center mt-4">DOWNLOAD RESIZED</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD ANOTHER</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");});
+    ws.panel.append(panelHeading("resize"),info,wF,hF,arB,presLbl,presets,fLbl,outFmt,dlB,rstB);
+
+    const sizeOut=el(`<div class="mono text-[13px] mb-2" style="color:var(--acc)"></div>`);
+    const hint2=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-6" style="color:var(--ink-faint)">set dimensions · preview is approximate</div>`);
+    const prevImg=document.createElement("img");
+    prevImg.className="max-w-full block checker p-2";
+    prevImg.style.maxHeight="460px";
+    ws.stage.append(hint2,sizeOut,prevImg);
+
+    function updateHint(){
+      if(!img)return;
+      const w=wF.value()||img.naturalWidth, h=hF.value()||img.naturalHeight;
+      sizeOut.textContent=`OUTPUT: ${w} × ${h} px`;
+      prevImg.src=img.src;
+    }
+
+    dlB.addEventListener("click",()=>{
+      if(!img)return;
+      const w=Math.max(1,wF.value()), h=Math.max(1,hF.value()), fmt=outFmt.value();
+      const mime=fmt==="jpg"?"image/jpeg":fmt==="webp"?"image/webp":"image/png";
+      const c=document.createElement("canvas"); c.width=w; c.height=h;
+      const cc=c.getContext("2d");
+      if(fmt==="jpg"){cc.fillStyle="#fff";cc.fillRect(0,0,w,h);}
+      cc.drawImage(img,0,0,w,h);
+      download(dataURLtoBlob(c.toDataURL(mime,.92)),baseName(srcFile.name)+"_"+w+"x"+h+"."+fmt);
+    });
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   15 · IMAGE ROTATE
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"img-rotate", name:"IMAGE ROTATE", tag:"IMAGE",
+  blurb:"Rotate and flip images. Fixed angles and free fine-tune.",
+  icon: ICONS.rotate,
+  mount(root){
+    let img=null, srcFile=null, rot=0, flipH=false, flipV=false, fineAngle=0;
+
+    const dz=dropzone({accept:"image/png,image/jpeg,image/webp",label:"DROP AN IMAGE"}, async files=>{
+      srcFile=files[0];
+      if(!/image\/(png|jpe?g|webp)/.test(srcFile.type))return toast("Needs jpg/png/webp.");
+      try{img=await loadImage(srcFile);}catch(e){return toast(e.message);}
+      rot=0;flipH=false;flipV=false;fineAngle=0;
+      fHB.style.borderColor="var(--line)"; fVB.style.borderColor="var(--line)";
+      const fineIn=$("input",fineS); fineIn.value=0; fineIn.dispatchEvent(new Event("input"));
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      renderPrev();
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+
+    const rotRow=el(`<div class="grid grid-cols-2 gap-2 mb-3"></div>`);
+    [["90° CW",90],["90° CCW",-90],["180°",180],["RESET",null]].forEach(([lbl,deg])=>{
+      const b=el(`<button class="btn justify-center">${lbl}</button>`);
+      b.addEventListener("click",()=>{
+        if(deg===null){rot=0;flipH=false;flipV=false;fineAngle=0;fHB.style.borderColor="var(--line)";fVB.style.borderColor="var(--line)";const fi=$("input",fineS);fi.value=0;fi.dispatchEvent(new Event("input"));}
+        else rot=(rot+deg+360)%360;
+        renderPrev();
+      });
+      rotRow.appendChild(b);
+    });
+
+    const flipRow=el(`<div class="flex gap-2 mb-4"></div>`);
+    const fHB=el(`<button class="btn flex-1 justify-center">FLIP H</button>`);
+    const fVB=el(`<button class="btn flex-1 justify-center">FLIP V</button>`);
+    fHB.addEventListener("click",()=>{flipH=!flipH;fHB.style.borderColor=flipH?"var(--acc)":"var(--line)";renderPrev();});
+    fVB.addEventListener("click",()=>{flipV=!flipV;fVB.style.borderColor=flipV?"var(--acc)":"var(--line)";renderPrev();});
+    flipRow.append(fHB,fVB);
+
+    const fineS=slider({label:"Fine-tune angle",min:-45,max:45,step:.5,value:0,fmt:v=>v+(v>0?"°":"°")});
+    fineS.onchange(v=>{fineAngle=v;renderPrev();});
+
+    const fLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2 mt-1" style="color:var(--ink-dim)">Output format</div>`);
+    const outFmt=chips([{label:"PNG",value:"png"},{label:"JPG",value:"jpg"}],"png");
+    const dlB=el(`<button class="btn btn-acc w-full justify-center mt-4">DOWNLOAD</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD ANOTHER</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");});
+    const rLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2" style="color:var(--ink-dim)">Rotate</div>`);
+    ws.panel.append(panelHeading("rotate & flip"),rLbl,rotRow,flipRow,fineS,fLbl,outFmt,dlB,rstB);
+
+    const pC=document.createElement("canvas"); pC.className="max-w-full block"; pC.style.maxHeight="520px";
+    const si=el(`<div><div class="mono text-[11px] tracking-[.15em] uppercase mb-3" style="color:var(--ink-faint)">live preview</div><div class="checker p-3 inline-block max-w-full"></div></div>`);
+    si.querySelector(".checker").appendChild(pC); ws.stage.appendChild(si);
+
+    function renderPrev(){
+      if(!img)return;
+      const totalRad=(rot+fineAngle)*Math.PI/180;
+      const sin=Math.abs(Math.sin(totalRad)), cos=Math.abs(Math.cos(totalRad));
+      const iw=img.naturalWidth, ih=img.naturalHeight;
+      const W=Math.round(iw*cos+ih*sin), H=Math.round(iw*sin+ih*cos);
+      pC.width=W; pC.height=H;
+      const cc=pC.getContext("2d");
+      cc.clearRect(0,0,W,H);
+      cc.save();
+      cc.translate(W/2,H/2);
+      if(flipH)cc.scale(-1,1);
+      if(flipV)cc.scale(1,-1);
+      cc.rotate(totalRad);
+      cc.drawImage(img,-iw/2,-ih/2);
+      cc.restore();
+    }
+
+    dlB.addEventListener("click",()=>{
+      if(!img)return;
+      renderPrev();
+      const fmt=outFmt.value(), mime=fmt==="png"?"image/png":"image/jpeg";
+      if(fmt==="jpg"){
+        const tmp=document.createElement("canvas"); tmp.width=pC.width; tmp.height=pC.height;
+        const tc=tmp.getContext("2d"); tc.fillStyle="#fff"; tc.fillRect(0,0,tmp.width,tmp.height); tc.drawImage(pC,0,0);
+        download(dataURLtoBlob(tmp.toDataURL(mime,.92)),baseName(srcFile.name)+"_rotated."+fmt);
+      }else{
+        download(dataURLtoBlob(pC.toDataURL(mime,.92)),baseName(srcFile.name)+"_rotated."+fmt);
+      }
+    });
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   16 · WEBP CONVERTER
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"webp-conv", name:"WEBP CONVERT", tag:"CONVERT",
+  blurb:"Convert between WEBP, PNG, and JPG in batches.",
+  icon: ICONS.webp,
+  mount(root){
+    let files=[];
+    const webpEncode=(()=>{const c=document.createElement("canvas");c.width=c.height=1;return c.toDataURL("image/webp").startsWith("data:image/webp");})();
+
+    const dz=dropzone({accept:"image/png,image/jpeg,image/webp",multiple:true,label:"DROP IMAGES",sub:"jpg · png · webp · multiple"}, fs=>{
+      files=fs.filter(f=>/image\/(png|jpe?g|webp)/.test(f.type));
+      if(!files.length)return toast("No supported images found.");
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      info.textContent=`${files.length} file${files.length>1?"s":""} loaded`;
+      grid.innerHTML=""; outputs=[]; zipB.disabled=true;
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+    const info=el(`<div class="mono text-[11px] mb-3" style="color:var(--ink-dim)"></div>`);
+    const warnEl=el(`<div class="mono text-[10px] leading-relaxed mb-3 p-2 border" style="border-color:var(--line-soft);color:var(--bad);display:${webpEncode?"none":""}">⚠ WEBP encoding unsupported in this browser. PNG/JPG only.</div>`);
+    const fmtChips=chips([{label:"→ WEBP",value:"webp"},{label:"→ PNG",value:"png"},{label:"→ JPG",value:"jpg"}],"webp",v=>{
+      qual.style.display=(v==="webp"||v==="jpg")?"":"none";
+    });
+    const qual=slider({label:"Quality",min:.3,max:.95,step:.05,value:.85,fmt:v=>Math.round(v*100)+"%"});
+    const goB=el(`<button class="btn btn-acc w-full justify-center mt-2">CONVERT</button>`);
+    const zipB=el(`<button class="btn w-full justify-center mt-2" disabled>DOWNLOAD ZIP</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD OTHERS</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");});
+    const fLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2" style="color:var(--ink-dim)">Target format</div>`);
+    ws.panel.append(panelHeading("settings"),info,warnEl,fLbl,fmtChips,el(`<div class="h-4"></div>`),qual,goB,zipB,rstB);
+
+    const grid=el(`<div class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>`);
+    ws.stage.appendChild(grid);
+    let outputs=[];
+
+    goB.addEventListener("click",async()=>{
+      grid.innerHTML=""; outputs=[];
+      let fmt=fmtChips.value();
+      if(fmt==="webp"&&!webpEncode){toast("WEBP encode not supported — using PNG.");fmt="png";}
+      const mime=fmt==="jpg"?"image/jpeg":fmt==="webp"?"image/webp":"image/png";
+      const prog=busy("converting…"); ws.stage.appendChild(prog);
+      for(const f of files){
+        let img; try{img=await loadImage(f);}catch(e){toast("Skipped: "+f.name);continue;}
+        const c=document.createElement("canvas"); c.width=img.naturalWidth; c.height=img.naturalHeight;
+        const cc=c.getContext("2d");
+        if(fmt==="jpg"){cc.fillStyle="#fff";cc.fillRect(0,0,c.width,c.height);}
+        cc.drawImage(img,0,0);
+        const blob=dataURLtoBlob(c.toDataURL(mime,qual.value()));
+        const name=baseName(f.name)+"."+fmt;
+        outputs.push({blob,name});
+        const cell=el(`<div class="border p-2 ticked" style="border-color:var(--line-soft);background:var(--panel-2)">
+          <div class="checker mb-2"><img class="w-full block" alt=""></div>
+          <div class="mono text-[10px] truncate" style="color:var(--ink-faint)">${name}</div>
+          <div class="flex justify-between items-center gap-2 mt-1">
+            <span class="mono text-[10px]" style="color:var(--ink-dim)">${fmtBytes(f.size)} → ${fmtBytes(blob.size)}</span>
+            <button class="btn btn-sm">SAVE</button>
+          </div>
+        </div>`);
+        $("img",cell).src=URL.createObjectURL(blob);
+        $("button",cell).addEventListener("click",()=>download(blob,name));
+        grid.insertBefore(cell,prog);
+        await new Promise(r=>setTimeout(r));
+      }
+      prog.remove(); zipB.disabled=outputs.length<2;
+      toast(`${outputs.length} file${outputs.length>1?"s":""} converted.`);
+    });
+
+    zipB.addEventListener("click",async()=>{
+      const zip=new JSZip(); outputs.forEach(o=>zip.file(o.name,o.blob));
+      download(await zip.generateAsync({type:"blob"}),"ezconv_webp.zip");
+    });
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   17 · METADATA STRIPPER
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"meta-strip", name:"META STRIP", tag:"IMAGE",
+  blurb:"Remove all EXIF/GPS/metadata from JPGs and PNGs via canvas round-trip.",
+  icon: ICONS.metadata,
+  mount(root){
+    let files=[];
+    const dz=dropzone({accept:"image/png,image/jpeg",multiple:true,label:"DROP IMAGES",sub:"jpg · png · multiple"}, fs=>{
+      files=fs.filter(f=>/image\/(png|jpe?g)/.test(f.type));
+      if(!files.length)return toast("No jpg/png found.");
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      info.textContent=`${files.length} file${files.length>1?"s":""} loaded`;
+      grid.innerHTML=""; outputs=[]; zipB.disabled=true;
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+    const info=el(`<div class="mono text-[11px] mb-3" style="color:var(--ink-dim)"></div>`);
+    const note=el(`<div class="mono text-[10px] leading-relaxed mb-4 p-2 border" style="border-color:var(--line-soft);color:var(--ink-faint)">Canvas round-trip strips all EXIF, IPTC, XMP, and GPS data including camera info and timestamps.</div>`);
+    const fLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2" style="color:var(--ink-dim)">Output format</div>`);
+    const outFmt=chips([{label:"KEEP",value:"keep"},{label:"→ PNG",value:"png"},{label:"→ JPG",value:"jpg"}],"keep");
+    const goB=el(`<button class="btn btn-acc w-full justify-center mt-3">STRIP METADATA</button>`);
+    const zipB=el(`<button class="btn w-full justify-center mt-2" disabled>DOWNLOAD ZIP</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD OTHERS</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");});
+    ws.panel.append(panelHeading("settings"),info,note,fLbl,outFmt,goB,zipB,rstB);
+
+    const grid=el(`<div class="flex flex-col gap-2"></div>`);
+    ws.stage.appendChild(grid);
+    let outputs=[];
+
+    goB.addEventListener("click",async()=>{
+      grid.innerHTML=""; outputs=[];
+      const prog=busy("stripping…"); ws.stage.appendChild(prog);
+      for(const f of files){
+        let img; try{img=await loadImage(f);}catch(e){toast("Skipped: "+f.name);continue;}
+        const c=document.createElement("canvas"); c.width=img.naturalWidth; c.height=img.naturalHeight;
+        const cc=c.getContext("2d");
+        const fmtMode=outFmt.value();
+        const fmt=fmtMode==="keep"?(f.type==="image/jpeg"?"jpg":"png"):fmtMode;
+        const mime=fmt==="jpg"?"image/jpeg":"image/png";
+        if(fmt==="jpg"){cc.fillStyle="#fff";cc.fillRect(0,0,c.width,c.height);}
+        cc.drawImage(img,0,0);
+        const blob=dataURLtoBlob(c.toDataURL(mime,.93));
+        const name=baseName(f.name)+"_stripped."+fmt;
+        outputs.push({blob,name});
+        const saved=1-blob.size/f.size;
+        const barW=Math.max(2,Math.round(blob.size/f.size*100));
+        const row=el(`<div class="border p-3" style="border-color:var(--line-soft);background:var(--panel-2)">
+          <div class="flex justify-between items-center gap-3 mb-2">
+            <span class="mono text-[11px] truncate" style="color:var(--ink)">${f.name}</span>
+            <button class="btn btn-sm shrink-0">SAVE</button>
+          </div>
+          <div class="flex gap-4 mono text-[10px] mb-2" style="color:var(--ink-dim)">
+            <span>${fmtBytes(f.size)} → <span style="color:var(--ink)">${fmtBytes(blob.size)}</span></span>
+            <span style="color:${saved>0?"var(--ok)":"var(--ink-dim)"}">${saved>0?"−"+Math.round(saved*100)+"%":"±0%"}</span>
+          </div>
+          <div class="h-1" style="background:var(--line-soft)"><div style="width:${barW}%;height:100%;background:var(--acc)"></div></div>
+        </div>`);
+        $("button",row).addEventListener("click",()=>download(blob,name));
+        grid.insertBefore(row,prog);
+        await new Promise(r=>setTimeout(r));
+      }
+      prog.remove(); zipB.disabled=outputs.length<2;
+      toast(`${outputs.length} file${outputs.length>1?"s":""} stripped.`);
+    });
+
+    zipB.addEventListener("click",async()=>{
+      const zip=new JSZip(); outputs.forEach(o=>zip.file(o.name,o.blob));
+      download(await zip.generateAsync({type:"blob"}),"ezconv_stripped.zip");
+    });
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   18 · IMAGE ADJUST  (brightness · contrast · saturation)
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"img-adjust", name:"IMAGE ADJUST", tag:"IMAGE",
+  blurb:"Tune brightness, contrast, saturation, and hue with live CSS-filter preview.",
+  icon: ICONS.adjust,
+  mount(root){
+    let img=null, srcFile=null;
+
+    const dz=dropzone({accept:"image/png,image/jpeg",label:"DROP AN IMAGE"}, async files=>{
+      srcFile=files[0];
+      if(!/image\/(png|jpe?g)/.test(srcFile.type))return toast("Needs jpg or png.");
+      try{img=await loadImage(srcFile);}catch(e){return toast(e.message);}
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      prevImg.src=img.src; applyFilter();
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+
+    const bS=slider({label:"Brightness",min:-100,max:100,step:1,value:0,fmt:v=>(v>0?"+":"")+v});
+    const cS=slider({label:"Contrast",  min:-100,max:100,step:1,value:0,fmt:v=>(v>0?"+":"")+v});
+    const sS=slider({label:"Saturation",min:-100,max:100,step:1,value:0,fmt:v=>(v>0?"+":"")+v});
+    const hS=slider({label:"Hue rotation",min:-180,max:180,step:1,value:0,fmt:v=>(v>0?"+":"")+v+"°"});
+    [bS,cS,sS,hS].forEach(s=>s.onchange(()=>applyFilter()));
+
+    const rstSliders=el(`<button class="btn w-full justify-center mb-3">RESET ALL</button>`);
+    rstSliders.addEventListener("click",()=>{
+      [bS,cS,sS,hS].forEach(s=>{ const i=$("input",s); i.value=0; i.dispatchEvent(new Event("input")); });
+    });
+
+    const fLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2 mt-1" style="color:var(--ink-dim)">Output format</div>`);
+    const outFmt=chips([{label:"PNG",value:"png"},{label:"JPG",value:"jpg"}],"png");
+    const qual=slider({label:"JPG quality",min:.3,max:.95,step:.05,value:.9,fmt:v=>Math.round(v*100)+"%"});
+    qual.style.display="none";
+    // show/hide qual when format chip is clicked
+    ws.panel.addEventListener("click",e=>{if(e.target.classList.contains("chip"))setTimeout(()=>{qual.style.display=outFmt.value()==="jpg"?"":"none";},0);});
+    const dlPng=el(`<button class="btn btn-acc w-full justify-center mt-2">DOWNLOAD PNG</button>`);
+    const dlJpg=el(`<button class="btn w-full justify-center mt-2">DOWNLOAD JPG</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD ANOTHER</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");});
+    ws.panel.append(panelHeading("adjustments"),bS,cS,sS,hS,rstSliders,fLbl,outFmt,qual,dlPng,dlJpg,rstB);
+
+    const prevImg=document.createElement("img");
+    prevImg.className="max-w-full block"; prevImg.style.maxHeight="520px";
+    const si=el(`<div><div class="mono text-[11px] tracking-[.15em] uppercase mb-3" style="color:var(--ink-faint)">live preview via CSS filter</div><div class="checker p-3 inline-block max-w-full"></div></div>`);
+    si.querySelector(".checker").appendChild(prevImg); ws.stage.appendChild(si);
+
+    function cssFilter(){
+      return `brightness(${1+bS.value()/100}) contrast(${1+cS.value()/100}) saturate(${1+sS.value()/100}) hue-rotate(${hS.value()}deg)`;
+    }
+    function applyFilter(){ if(img)prevImg.style.filter=cssFilter(); }
+
+    function doExport(mime,ext){
+      if(!img)return;
+      const c=document.createElement("canvas"); c.width=img.naturalWidth; c.height=img.naturalHeight;
+      const cc=c.getContext("2d");
+      if(mime==="image/jpeg"){cc.fillStyle="#fff";cc.fillRect(0,0,c.width,c.height);}
+      cc.filter=cssFilter();
+      cc.drawImage(img,0,0);
+      download(dataURLtoBlob(c.toDataURL(mime,qual.value())),baseName(srcFile.name)+"_adjusted."+ext);
+    }
+    dlPng.addEventListener("click",()=>doExport("image/png","png"));
+    dlJpg.addEventListener("click",()=>doExport("image/jpeg","jpg"));
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   19 · FAVICON GENERATOR
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"favicon-gen", name:"FAVICON GEN", tag:"IMAGE",
+  blurb:"Generate all standard favicon sizes as PNGs with an HTML snippet.",
+  icon: ICONS.favicon,
+  mount(root){
+    let img=null, srcFile=null;
+    const SIZES=[16,32,48,96,180,192,512];
+
+    const dz=dropzone({accept:"image/png,image/jpeg,image/webp,image/svg+xml",label:"DROP ANY IMAGE",sub:"png · jpg · webp · svg"}, async files=>{
+      srcFile=files[0];
+      try{
+        if(srcFile.type==="image/svg+xml"||srcFile.name.toLowerCase().endsWith(".svg")){
+          const text=await srcFile.text();
+          const blob=new Blob([text],{type:"image/svg+xml"});
+          const url=URL.createObjectURL(blob);
+          img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>{URL.revokeObjectURL(url);res(i);};i.onerror=()=>{URL.revokeObjectURL(url);rej();};i.src=url;});
+        }else{ img=await loadImage(srcFile); }
+      }catch(e){return toast("Could not load image.");}
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      buildPreviews();
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+    const note=el(`<div class="mono text-[10px] leading-relaxed mb-4 p-2 border" style="border-color:var(--line-soft);color:var(--ink-faint)">Crops a square from the centre of your image. For best results, use a square source.</div>`);
+    const dlAllB=el(`<button class="btn btn-acc w-full justify-center mt-2">DOWNLOAD ALL (ZIP)</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD ANOTHER</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");});
+    ws.panel.append(panelHeading("sizes"),note,dlAllB,rstB);
+
+    const previewGrid=el(`<div></div>`);
+    const snippetBox=el(`<div class="mt-6 p-4 border" style="border-color:var(--line-soft);background:var(--bg)">
+      <div class="mono text-[11px] tracking-[.15em] uppercase mb-3" style="color:var(--acc)">// HTML snippet</div>
+      <pre class="mono text-[11px] leading-loose overflow-x-auto" style="color:var(--ink-dim)"></pre>
+    </div>`);
+    ws.stage.append(previewGrid,snippetBox);
+
+    function crop(sz){
+      const side=Math.min(img.naturalWidth,img.naturalHeight);
+      const ox=(img.naturalWidth-side)/2, oy=(img.naturalHeight-side)/2;
+      const c=document.createElement("canvas"); c.width=sz; c.height=sz;
+      c.getContext("2d").drawImage(img,ox,oy,side,side,0,0,sz,sz);
+      return c;
+    }
+
+    function buildPreviews(){
+      previewGrid.innerHTML="";
+      const row=el(`<div class="flex flex-wrap items-end gap-4 mb-4"></div>`);
+      SIZES.forEach(sz=>{
+        const c=crop(sz);
+        const wrap=el(`<div class="text-center group cursor-pointer"></div>`);
+        const display=Math.min(sz,72);
+        const imgEl=document.createElement("img");
+        imgEl.src=c.toDataURL("image/png");
+        imgEl.style.cssText=`width:${display}px;height:${display}px;border:1px solid var(--line);image-rendering:${sz<=48?"pixelated":"auto"};display:block;`;
+        const lbl=el(`<div class="mono text-[10px] mt-1 mb-1" style="color:var(--ink-faint)">${sz}px</div>`);
+        const dlB=el(`<button class="btn btn-sm mx-auto justify-center opacity-0 group-hover:opacity-100 transition-opacity">↓</button>`);
+        dlB.addEventListener("click",()=>download(dataURLtoBlob(c.toDataURL("image/png")),`favicon-${sz}.png`));
+        wrap.append(imgEl,lbl,dlB);
+        row.appendChild(wrap);
+      });
+      previewGrid.appendChild(row);
+      $("pre",snippetBox).textContent=[
+        `<link rel="icon" href="favicon-32.png" sizes="32x32">`,
+        `<link rel="icon" href="favicon-48.png" sizes="48x48">`,
+        `<link rel="apple-touch-icon" href="favicon-180.png" sizes="180x180">`,
+        `<link rel="manifest" href="manifest.json">`,
+        `<!-- in manifest.json: icons 192 + 512 -->`,
+      ].join("\n");
+    }
+
+    dlAllB.addEventListener("click",async()=>{
+      if(!img)return;
+      const zip=new JSZip();
+      SIZES.forEach(sz=>zip.file(`favicon-${sz}.png`,dataURLtoBlob(crop(sz).toDataURL("image/png"))));
+      download(await zip.generateAsync({type:"blob"}),"favicons.zip");
+      toast(`${SIZES.length} favicon PNGs ready.`);
+    });
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   20 · IMAGE WATERMARK
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"img-watermark", name:"WATERMARK", tag:"IMAGE",
+  blurb:"Stamp text or an image watermark with opacity and position control.",
+  icon: ICONS.watermark,
+  mount(root){
+    let img=null, srcFile=null, wmkImg=null;
+    let cfg={mode:"text",text:"© EZCONV.XYZ",fontSize:52,color:"#ffffff",opacity:50,pos:"se",imgScale:20};
+
+    const dz=dropzone({accept:"image/png,image/jpeg",label:"DROP BASE IMAGE"}, async files=>{
+      srcFile=files[0];
+      if(!/image\/(png|jpe?g)/.test(srcFile.type))return toast("Needs jpg or png.");
+      try{img=await loadImage(srcFile);}catch(e){return toast(e.message);}
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      renderPrev();
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+
+    const modeChips=chips([{label:"TEXT",value:"text"},{label:"IMAGE",value:"image"}],"text",v=>{
+      cfg.mode=v; textCtrl.style.display=v==="text"?"":"none"; imgCtrl.style.display=v==="image"?"":"none"; renderPrev();
+    });
+
+    /* text controls */
+    const textCtrl=el(`<div></div>`);
+    const txtF=textField({label:"Text",placeholder:"Your watermark…",value:cfg.text});
+    txtF.onchange(v=>{cfg.text=v;renderPrev();});
+    const fsS=slider({label:"Font size",min:8,max:240,step:1,value:cfg.fontSize,fmt:v=>v+"px"});
+    fsS.onchange(v=>{cfg.fontSize=v;renderPrev();});
+    const colorRow=el(`<div class="mb-4"><div class="mono text-[11px] tracking-[.15em] uppercase mb-1.5" style="color:var(--ink-dim)">Color</div>
+      <div class="flex items-center gap-3">
+        <input type="color" value="${cfg.color}" style="width:34px;height:28px;border:1px solid var(--line);background:none;cursor:pointer;padding:2px">
+        <span class="mono text-[11px]" style="color:var(--ink-dim)">${cfg.color}</span>
+      </div></div>`);
+    $("input[type=color]",colorRow).addEventListener("input",e=>{cfg.color=e.target.value;$("span",colorRow).textContent=e.target.value;renderPrev();});
+    textCtrl.append(txtF,fsS,colorRow);
+
+    /* image controls */
+    const imgCtrl=el(`<div style="display:none"></div>`);
+    const wmkDz=dropzone({accept:"image/png",label:"DROP WATERMARK PNG",sub:"transparent PNG recommended"}, async files=>{
+      try{wmkImg=await loadImage(files[0]);}catch(e){return toast(e.message);}
+      toast("Watermark image loaded."); renderPrev();
+    });
+    wmkDz.classList.remove("p-12"); wmkDz.classList.add("p-4","mb-3");
+    const scaleS=slider({label:"WM size",min:5,max:80,step:1,value:cfg.imgScale,fmt:v=>v+"%"});
+    scaleS.onchange(v=>{cfg.imgScale=v;renderPrev();});
+    imgCtrl.append(wmkDz,scaleS);
+
+    /* shared */
+    const opS=slider({label:"Opacity",min:0,max:100,step:1,value:cfg.opacity,fmt:v=>v+"%"});
+    opS.onchange(v=>{cfg.opacity=v;renderPrev();});
+
+    /* 3×3 position grid */
+    const posLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2 mt-1" style="color:var(--ink-dim)">Position</div>`);
+    const posGrid=el(`<div class="inline-grid grid-cols-3 gap-1.5 mb-4"></div>`);
+    const POS=["nw","n","ne","w","c","e","sw","s","se"];
+    POS.forEach(p=>{
+      const active=p===cfg.pos;
+      const b=el(`<button class="w-8 h-8 border flex items-center justify-center" style="border-color:${active?"var(--acc)":"var(--line)"};background:${active?"var(--acc-soft)":"transparent"}">
+        <div class="w-2 h-2 rounded-full" style="background:${active?"var(--acc)":"var(--line-soft)"}"></div>
+      </button>`);
+      b.addEventListener("click",()=>{
+        cfg.pos=p;
+        [...posGrid.children].forEach((x,i)=>{
+          const a=POS[i]===p;
+          x.style.borderColor=a?"var(--acc)":"var(--line)";
+          x.style.background=a?"var(--acc-soft)":"transparent";
+          $("div",x).style.background=a?"var(--acc)":"var(--line-soft)";
+        });
+        renderPrev();
+      });
+      posGrid.appendChild(b);
+    });
+
+    const dlPng=el(`<button class="btn btn-acc w-full justify-center mt-2">DOWNLOAD PNG</button>`);
+    const dlJpg=el(`<button class="btn w-full justify-center mt-2">DOWNLOAD JPG</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD ANOTHER</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");wmkImg=null;});
+    ws.panel.append(panelHeading("watermark"),modeChips,el(`<div class="h-4"></div>`),textCtrl,imgCtrl,opS,posLbl,posGrid,dlPng,dlJpg,rstB);
+
+    const pC=document.createElement("canvas"); pC.className="max-w-full block"; pC.style.maxHeight="520px";
+    const si=el(`<div><div class="mono text-[11px] tracking-[.15em] uppercase mb-3" style="color:var(--ink-faint)">live preview</div><div class="checker p-3 inline-block max-w-full"></div></div>`);
+    si.querySelector(".checker").appendChild(pC); ws.stage.appendChild(si);
+
+    function wmPos(pos,W,H,ww,wh){
+      const pad=Math.max(14,Math.round(Math.min(W,H)*.025));
+      const r=pos[0],c=pos[1];
+      const y=r==="n"?pad:r==="c"?(H-wh)/2:H-wh-pad;
+      const x=c==="w"?pad:c==="c"?(W-ww)/2:W-ww-pad;
+      return{x,y};
+    }
+
+    function renderPrev(){
+      if(!img)return;
+      const W=img.naturalWidth, H=img.naturalHeight;
+      pC.width=W; pC.height=H;
+      const cc=pC.getContext("2d");
+      cc.drawImage(img,0,0);
+      cc.save(); cc.globalAlpha=cfg.opacity/100;
+      if(cfg.mode==="text"){
+        const fs=Math.max(8,cfg.fontSize);
+        cc.font=`bold ${fs}px IBM Plex Sans,sans-serif`;
+        cc.textBaseline="top"; cc.fillStyle=cfg.color;
+        const tw=cc.measureText(cfg.text).width, th=fs*1.2;
+        const{x,y}=wmPos(cfg.pos,W,H,tw,th);
+        cc.shadowColor="rgba(0,0,0,.55)"; cc.shadowBlur=6;
+        cc.fillText(cfg.text,x,y);
+      }else if(cfg.mode==="image"&&wmkImg){
+        const ww=Math.round(W*cfg.imgScale/100);
+        const wh=Math.round(ww*wmkImg.naturalHeight/wmkImg.naturalWidth);
+        const{x,y}=wmPos(cfg.pos,W,H,ww,wh);
+        cc.drawImage(wmkImg,x,y,ww,wh);
+      }
+      cc.restore();
+    }
+
+    function doExport(mime,ext){
+      if(!img)return;
+      renderPrev();
+      if(mime==="image/jpeg"){
+        const tmp=document.createElement("canvas"); tmp.width=pC.width; tmp.height=pC.height;
+        const tc=tmp.getContext("2d"); tc.fillStyle="#fff"; tc.fillRect(0,0,tmp.width,tmp.height); tc.drawImage(pC,0,0);
+        download(dataURLtoBlob(tmp.toDataURL(mime,.92)),baseName(srcFile.name)+"_wm.jpg");
+      }else{
+        download(dataURLtoBlob(pC.toDataURL(mime,.92)),baseName(srcFile.name)+"_wm.png");
+      }
+    }
+    dlPng.addEventListener("click",()=>doExport("image/png","png"));
+    dlJpg.addEventListener("click",()=>doExport("image/jpeg","jpg"));
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   21 · COLOR REPLACE
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"color-replace", name:"COLOR REPLACE", tag:"IMAGE",
+  blurb:"Swap up to 3 colors in an image with adjustable tolerance.",
+  icon: ICONS.colorReplace,
+  mount(root){
+    let img=null, srcFile=null;
+    let pairs=[{find:"#e63946",replace:"#457b9d",tol:20}];
+
+    /* ── helpers ── */
+    function h2r(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
+
+    function applyReplace(srcCanvas){
+      const c=document.createElement("canvas"); c.width=srcCanvas.width; c.height=srcCanvas.height;
+      const cc=c.getContext("2d"); cc.drawImage(srcCanvas,0,0);
+      const id=cc.getImageData(0,0,c.width,c.height), d=id.data;
+      const ps=pairs
+        .filter(p=>/^#[0-9a-f]{6}$/i.test(p.find)&&/^#[0-9a-f]{6}$/i.test(p.replace))
+        .map(p=>{
+          const[fr,fg,fb]=h2r(p.find),[rr,rg,rb]=h2r(p.replace);
+          const mds=3*255*255*(p.tol/100)**2;
+          return{fr,fg,fb,rr,rg,rb,mds};
+        });
+      for(let i=0;i<d.length;i+=4){
+        const r=d[i],g=d[i+1],b=d[i+2];
+        for(const p of ps){
+          if((r-p.fr)**2+(g-p.fg)**2+(b-p.fb)**2<=p.mds){d[i]=p.rr;d[i+1]=p.rg;d[i+2]=p.rb;break;}
+        }
+      }
+      cc.putImageData(id,0,0); return c;
+    }
+
+    function mkColorInput(label,initial,onChange){
+      const w=el(`<div>
+        <div class="mono text-[10px] tracking-[.1em] uppercase mb-1" style="color:var(--ink-faint)">${label}</div>
+        <div class="flex items-center gap-2">
+          <input type="color" value="${initial}" style="width:32px;height:26px;border:1px solid var(--line);cursor:pointer;padding:1px;background:none;flex-shrink:0">
+          <input type="text" value="${initial.toUpperCase()}" class="field flex-1 min-w-0" style="font-size:11px;text-transform:uppercase" placeholder="#RRGGBB" spellcheck="false">
+        </div>
+      </div>`);
+      const cI=$("input[type=color]",w), tI=$("input[type=text]",w);
+      cI.addEventListener("input",()=>{tI.value=cI.value.toUpperCase();onChange(cI.value);});
+      tI.addEventListener("change",()=>{const v=tI.value.trim().toLowerCase();if(/^#[0-9a-f]{6}$/.test(v)){cI.value=v;onChange(v);}});
+      w.value=()=>cI.value;
+      w.setValue=v=>{cI.value=v;tI.value=v.toUpperCase();};
+      return w;
+    }
+
+    /* ── dropzone ── */
+    const dz=dropzone({accept:"image/png,image/jpeg",label:"DROP AN IMAGE"}, async files=>{
+      srcFile=files[0];
+      if(!/image\/(png|jpe?g)/.test(srcFile.type))return toast("Needs jpg or png.");
+      try{img=await loadImage(srcFile);}catch(e){return toast(e.message);}
+      srcInfo.textContent=`${srcFile.name} · ${img.naturalWidth}×${img.naturalHeight}`;
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      drawSource(); exportBtn.disabled=true;
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+    const srcInfo=el(`<div class="mono text-[11px] mb-3 break-all" style="color:var(--ink-dim)"></div>`);
+
+    /* ── pair builder ── */
+    const pairsWrap=el(`<div class="flex flex-col gap-3 mb-3"></div>`);
+
+    function renderPairs(){
+      pairsWrap.innerHTML="";
+      pairs.forEach((pair,i)=>{
+        const card=el(`<div class="p-3 border" style="border-color:var(--line-soft);background:var(--panel-2)"></div>`);
+        const hd=el(`<div class="flex justify-between items-center mb-2">
+          <span class="mono text-[10px] tracking-[.1em] uppercase" style="color:var(--acc)">// Pair ${i+1}</span>
+          ${pairs.length>1?`<button class="btn btn-sm" style="color:var(--bad)" data-rm>× REMOVE</button>`:""}
+        </div>`);
+        if(pairs.length>1) $("[data-rm]",hd).addEventListener("click",()=>{pairs.splice(i,1);renderPairs();addBtn.style.display="";});
+
+        const findW=mkColorInput("Find color",pair.find,v=>{pair.find=v;});
+        const sep=el(`<div class="mono text-[10px] text-center my-2" style="color:var(--ink-faint)">↓ replace with</div>`);
+        const replW=mkColorInput("Replace with",pair.replace,v=>{pair.replace=v;});
+        const tolDiv=el(`<div class="mt-3"></div>`);
+        const tolS=slider({label:"Tolerance",min:0,max:100,step:1,value:pair.tol,fmt:v=>v===0?"exact":v+"%"});
+        tolS.onchange(v=>{pair.tol=v;});
+        tolDiv.appendChild(tolS);
+        card.append(hd,findW,sep,replW,tolDiv);
+        pairsWrap.appendChild(card);
+      });
+      addBtn.style.display=pairs.length>=3?"none":"";
+    }
+    renderPairs();
+
+    const addBtn=el(`<button class="btn w-full justify-center mb-3">+ ADD COLOR PAIR</button>`);
+    addBtn.addEventListener("click",()=>{
+      if(pairs.length>=3)return;
+      pairs.push({find:"#ffffff",replace:"#000000",tol:20});
+      renderPairs();
+    });
+
+    const fLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2" style="color:var(--ink-dim)">Output format</div>`);
+    const outFmt=chips([{label:"PNG",value:"png"},{label:"JPG",value:"jpg"}],"png");
+    const prevBtn=el(`<button class="btn w-full justify-center mt-3">PREVIEW</button>`);
+    const exportBtn=el(`<button class="btn btn-acc w-full justify-center mt-2" disabled>EXPORT FULL RES</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD ANOTHER</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");exportBtn.disabled=true;});
+    ws.panel.append(panelHeading("color pairs"),srcInfo,pairsWrap,addBtn,fLbl,outFmt,prevBtn,exportBtn,rstB);
+
+    /* ── stage: before / after canvases ── */
+    const stageHint=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-3" style="color:var(--ink-faint)">before · after · preview first, then export</div>`);
+    const canvasRow=el(`<div class="grid grid-cols-2 gap-3"></div>`);
+    const srcCvs=document.createElement("canvas"); srcCvs.className="w-full block";
+    const outCvs=document.createElement("canvas"); outCvs.className="w-full block";
+    const srcWrap=el(`<div><div class="mono text-[10px] mb-1.5" style="color:var(--ink-faint)">Original</div><div class="checker"></div></div>`);
+    const outWrap=el(`<div><div class="mono text-[10px] mb-1.5" style="color:var(--ink-faint)">Result</div><div class="checker"></div></div>`);
+    $(".checker",srcWrap).appendChild(srcCvs); $(".checker",outWrap).appendChild(outCvs);
+    canvasRow.append(srcWrap,outWrap);
+    ws.stage.append(stageHint,canvasRow);
+
+    function drawSource(){
+      if(!img)return;
+      const scale=Math.min(1,680/img.naturalWidth);
+      srcCvs.width=Math.round(img.naturalWidth*scale); srcCvs.height=Math.round(img.naturalHeight*scale);
+      srcCvs.getContext("2d").drawImage(img,0,0,srcCvs.width,srcCvs.height);
+      outCvs.width=srcCvs.width; outCvs.height=srcCvs.height;
+      outCvs.getContext("2d").clearRect(0,0,outCvs.width,outCvs.height);
+    }
+
+    prevBtn.addEventListener("click",async()=>{
+      if(!img)return;
+      prevBtn.disabled=true; prevBtn.textContent="PROCESSING…";
+      await new Promise(r=>setTimeout(r,16));
+      const res=applyReplace(srcCvs);
+      outCvs.width=res.width; outCvs.height=res.height;
+      outCvs.getContext("2d").drawImage(res,0,0);
+      prevBtn.disabled=false; prevBtn.textContent="PREVIEW";
+      exportBtn.disabled=false;
+      toast("Preview ready — click Export for full resolution.");
+    });
+
+    exportBtn.addEventListener("click",async()=>{
+      if(!img)return;
+      exportBtn.disabled=true; exportBtn.textContent="PROCESSING…";
+      await new Promise(r=>setTimeout(r,16));
+      const full=document.createElement("canvas"); full.width=img.naturalWidth; full.height=img.naturalHeight;
+      full.getContext("2d").drawImage(img,0,0);
+      const res=applyReplace(full);
+      const fmt=outFmt.value(), mime=fmt==="jpg"?"image/jpeg":"image/png";
+      if(fmt==="jpg"){
+        const tmp=document.createElement("canvas"); tmp.width=res.width; tmp.height=res.height;
+        const tc=tmp.getContext("2d"); tc.fillStyle="#fff"; tc.fillRect(0,0,tmp.width,tmp.height); tc.drawImage(res,0,0);
+        download(dataURLtoBlob(tmp.toDataURL(mime,.92)),baseName(srcFile.name)+"_recolored.jpg");
+      }else{
+        download(dataURLtoBlob(res.toDataURL("image/png")),baseName(srcFile.name)+"_recolored.png");
+      }
+      exportBtn.disabled=false; exportBtn.textContent="EXPORT FULL RES";
+    });
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   22 · COLOR PICKER
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"color-pick", name:"COLOR PICKER", tag:"IMAGE",
+  blurb:"Hover any pixel to get its exact HEX, RGB, and HSL values. Click to collect.",
+  icon: ICONS.colorPick,
+  mount(root){
+    let img=null, srcFile=null, history=[];
+
+    /* ── color math ── */
+    function rgbToHsl(r,g,b){
+      r/=255;g/=255;b/=255;
+      const max=Math.max(r,g,b),min=Math.min(r,g,b);
+      let h=0,s=0,l=(max+min)/2;
+      if(max!==min){
+        const d=max-min; s=l>.5?d/(2-max-min):d/(max+min);
+        if(max===r)h=((g-b)/d+(g<b?6:0))/6;
+        else if(max===g)h=((b-r)/d+2)/6;
+        else h=((r-g)/d+4)/6;
+      }
+      return[Math.round(h*360),Math.round(s*100),Math.round(l*100)];
+    }
+    function rgb2hex(r,g,b){return'#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');}
+
+    /* ── dropzone ── */
+    const dz=dropzone({accept:"image/png,image/jpeg,image/webp",label:"DROP AN IMAGE",sub:"jpg · png · webp"}, async files=>{
+      srcFile=files[0];
+      if(!/image\/(png|jpe?g|webp)/.test(srcFile.type))return toast("Needs jpg/png/webp.");
+      try{img=await loadImage(srcFile);}catch(e){return toast(e.message);}
+      history=[]; renderHistory();
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      mainCvs.width=img.naturalWidth; mainCvs.height=img.naturalHeight;
+      mainCvs.getContext("2d").drawImage(img,0,0);
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+
+    /* ── loupe (magnifier) ── */
+    const LOUPE=96, ZOOM=8, HALF=Math.floor(LOUPE/ZOOM/2);
+    const loupeCvs=document.createElement("canvas");
+    loupeCvs.width=loupeCvs.height=LOUPE;
+    loupeCvs.style.cssText=`border:1px solid var(--line);image-rendering:pixelated;display:block;width:${LOUPE}px;height:${LOUPE}px;`;
+    const loupeLbl=el(`<div class="mono text-[10px] tracking-[.1em] uppercase mb-2" style="color:var(--ink-dim)">Magnifier (8×)</div>`);
+
+    /* ── color swatch + values ── */
+    const swatchEl=el(`<div style="height:52px;border:1px solid var(--line);margin-bottom:.75rem;margin-top:.75rem;background:var(--panel-2)"></div>`);
+
+    function mkValueRow(label,id){
+      const row=el(`<div class="flex justify-between items-center mb-2">
+        <span class="mono text-[10px]" style="color:var(--ink-faint)">${label}</span>
+        <div class="flex items-center gap-2">
+          <span class="mono text-[11px]" style="color:var(--ink);letter-spacing:.03em" data-id="${id}">—</span>
+          <button class="btn btn-sm" style="font-size:10px;padding:.2rem .45rem">COPY</button>
+        </div>
+      </div>`);
+      $("button",row).addEventListener("click",async()=>{
+        const txt=$(`[data-id="${id}"]`,ws.panel)?.textContent;
+        if(!txt||txt==="—")return;
+        try{await navigator.clipboard.writeText(txt);toast("Copied: "+txt);}catch{toast(txt);}
+      });
+      return row;
+    }
+
+    const hexRow=mkValueRow("HEX","cpHex");
+    const rgbRow=mkValueRow("RGB","cpRgb");
+    const hslRow=mkValueRow("HSL","cpHsl");
+    const alphaRow=mkValueRow("Alpha","cpAlpha");
+
+    /* ── history palette ── */
+    const histLbl=el(`<div class="mono text-[10px] tracking-[.1em] uppercase mt-4 mb-2" style="color:var(--ink-dim)">Picked colors <span style="color:var(--ink-faint)">(click canvas to collect)</span></div>`);
+    const histGrid=el(`<div class="flex flex-wrap gap-1.5 mb-3 min-h-[28px]"></div>`);
+    const clearBtn=el(`<button class="btn btn-sm w-full justify-center">CLEAR HISTORY</button>`);
+    clearBtn.addEventListener("click",()=>{history=[];renderHistory();});
+
+    const rstB=el(`<button class="btn w-full justify-center mt-4">LOAD ANOTHER</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");});
+
+    ws.panel.append(
+      panelHeading("color info"),
+      loupeLbl, loupeCvs,
+      swatchEl,
+      hexRow, rgbRow, hslRow, alphaRow,
+      histLbl, histGrid, clearBtn,
+      rstB
+    );
+
+    /* ── main canvas (stage) ── */
+    const hint=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-3" style="color:var(--ink-faint)">hover to inspect · click to collect color</div>`);
+    const mainCvs=document.createElement("canvas");
+    mainCvs.className="max-w-full block"; mainCvs.style.maxHeight="600px"; mainCvs.style.cursor="crosshair";
+    ws.stage.append(hint, mainCvs);
+
+    /* ── update helpers ── */
+    function getPixelAt(clientX,clientY){
+      const rect=mainCvs.getBoundingClientRect();
+      const sx=mainCvs.width/rect.width, sy=mainCvs.height/rect.height;
+      const x=Math.max(0,Math.min(mainCvs.width-1,Math.floor((clientX-rect.left)*sx)));
+      const y=Math.max(0,Math.min(mainCvs.height-1,Math.floor((clientY-rect.top)*sy)));
+      const px=mainCvs.getContext("2d").getImageData(x,y,1,1).data;
+      return{x,y,r:px[0],g:px[1],b:px[2],a:px[3]};
+    }
+
+    function updateDisplay(r,g,b,a){
+      const hex=rgb2hex(r,g,b);
+      const[h,s,l]=rgbToHsl(r,g,b);
+      swatchEl.style.background=hex;
+      // light/dark text on swatch for readability
+      swatchEl.style.color=l<50?"#fff":"#000";
+      $("[data-id=cpHex]",ws.panel).textContent=hex.toUpperCase();
+      $("[data-id=cpRgb]",ws.panel).textContent=`rgb(${r}, ${g}, ${b})`;
+      $("[data-id=cpHsl]",ws.panel).textContent=`hsl(${h}, ${s}%, ${l}%)`;
+      $("[data-id=cpAlpha]",ws.panel).textContent=a===255?"100%":Math.round(a/255*100)+"%";
+    }
+
+    function updateLoupe(x,y){
+      const lCtx=loupeCvs.getContext("2d");
+      lCtx.imageSmoothingEnabled=false;
+      lCtx.clearRect(0,0,LOUPE,LOUPE);
+      lCtx.drawImage(mainCvs, x-HALF, y-HALF, LOUPE/ZOOM, LOUPE/ZOOM, 0, 0, LOUPE, LOUPE);
+      // crosshair
+      lCtx.strokeStyle="#ff7a1a"; lCtx.lineWidth=1; lCtx.globalAlpha=.9;
+      lCtx.beginPath();
+      lCtx.moveTo(LOUPE/2,0); lCtx.lineTo(LOUPE/2,LOUPE);
+      lCtx.moveTo(0,LOUPE/2); lCtx.lineTo(LOUPE,LOUPE/2);
+      lCtx.stroke(); lCtx.globalAlpha=1;
+      // border
+      lCtx.strokeStyle="#ff7a1a"; lCtx.lineWidth=1.5;
+      lCtx.strokeRect(.75,.75,LOUPE-1.5,LOUPE-1.5);
+    }
+
+    function renderHistory(){
+      histGrid.innerHTML="";
+      if(!history.length){histGrid.innerHTML=`<span class="mono text-[10px]" style="color:var(--ink-faint)">No colors yet</span>`;return;}
+      history.forEach(({hex,label})=>{
+        const sw=el(`<div title="${hex}" style="width:26px;height:26px;border:1px solid var(--line);background:${hex};cursor:pointer;flex-shrink:0" class="ticked"></div>`);
+        sw.addEventListener("click",async()=>{
+          try{await navigator.clipboard.writeText(hex);toast("Copied: "+hex.toUpperCase());}catch{toast(hex.toUpperCase());}
+        });
+        histGrid.appendChild(sw);
+      });
+    }
+
+    renderHistory(); // show "No colors yet" on load
+
+    /* ── event listeners ── */
+    mainCvs.addEventListener("mousemove",e=>{
+      const{x,y,r,g,b,a}=getPixelAt(e.clientX,e.clientY);
+      updateDisplay(r,g,b,a);
+      updateLoupe(x,y);
+    });
+
+    mainCvs.addEventListener("click",e=>{
+      const{r,g,b,a}=getPixelAt(e.clientX,e.clientY);
+      const hex=rgb2hex(r,g,b);
+      if(history.length===0||history[0].hex!==hex){
+        history.unshift({hex});
+        if(history.length>16)history.pop();
+        renderHistory();
+      }
+      toast("Collected: "+hex.toUpperCase());
+    });
+
+    mainCvs.addEventListener("mouseleave",()=>{
+      // reset loupe on leave
+      const lCtx=loupeCvs.getContext("2d");
+      lCtx.clearRect(0,0,LOUPE,LOUPE);
+    });
+
+    root.append(dz,ws);
   }
 });
 
