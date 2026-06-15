@@ -498,6 +498,7 @@ const ICONS = {
   watermark:     "watermark.svg",
   colorReplace:  "color-replace.svg",
   colorPick:     "color-pick.svg",
+  heic:          "heic.svg",
 };
 
 /* =====================================================================
@@ -2989,6 +2990,99 @@ TOOLS.push({
       // reset loupe on leave
       const lCtx=loupeCvs.getContext("2d");
       lCtx.clearRect(0,0,LOUPE,LOUPE);
+    });
+
+    root.append(dz,ws);
+  }
+});
+
+/* ---------------------------------------------------------------
+   23 · HEIC → JPG / PNG
+---------------------------------------------------------------- */
+TOOLS.push({
+  id:"heic-convert", name:"HEIC \u2192 JPG/PNG", tag:"CONVERT",
+  blurb:"Convert iPhone HEIC/HEIF photos to JPG or PNG. Batch + ZIP.",
+  icon: ICONS.heic,
+  mount(root){
+    let files=[], outputs=[], libReady=false, libLoading=null;
+
+    /* lazy-load heic2any only when this tool is first used (~1.5MB) */
+    function ensureLib(){
+      if(libReady)return Promise.resolve();
+      if(libLoading)return libLoading;
+      libLoading=new Promise((res,rej)=>{
+        const s=document.createElement("script");
+        s.src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
+        s.onload=()=>{libReady=true;res();};
+        s.onerror=()=>rej(new Error("Could not load the HEIC decoder. Check your connection."));
+        document.head.appendChild(s);
+      });
+      return libLoading;
+    }
+
+    const isHeic=f=>/\.(heic|heif)$/i.test(f.name)||/image\/(heic|heif)/i.test(f.type);
+
+    const dz=dropzone({accept:".heic,.heif,image/heic,image/heif",multiple:true,label:"DROP HEIC FILES",sub:"heic · heif · multiple"}, fs=>{
+      files=fs.filter(isHeic);
+      if(!files.length)return toast("No .heic / .heif files found.");
+      dz.classList.add("hidden"); ws.classList.remove("hidden");
+      info.textContent=`${files.length} file${files.length>1?"s":""} loaded`;
+      grid.innerHTML=""; outputs=[]; zipB.disabled=true;
+    });
+
+    const ws=workspace(); ws.classList.add("hidden");
+    const info=el(`<div class="mono text-[11px] mb-3" style="color:var(--ink-dim)"></div>`);
+    const note=el(`<div class="mono text-[10px] leading-relaxed mb-4 p-2 border" style="border-color:var(--line-soft);color:var(--ink-faint)">Decoder (~1.5&nbsp;MB) loads on first conversion. Everything runs locally — files never leave your device.</div>`);
+    const fLbl=el(`<div class="mono text-[11px] tracking-[.15em] uppercase mb-2" style="color:var(--ink-dim)">Output format</div>`);
+    const fmtChips=chips([{label:"JPG",value:"jpg"},{label:"PNG",value:"png"}],"jpg",v=>{qual.style.display=v==="jpg"?"":"none";});
+    const qual=slider({label:"JPG quality",min:.4,max:.95,step:.05,value:.85,fmt:v=>Math.round(v*100)+"%"});
+    const goB=el(`<button class="btn btn-acc w-full justify-center mt-2">CONVERT ALL</button>`);
+    const zipB=el(`<button class="btn w-full justify-center mt-2" disabled>DOWNLOAD ZIP</button>`);
+    const rstB=el(`<button class="btn w-full justify-center mt-2">LOAD OTHERS</button>`);
+    rstB.addEventListener("click",()=>{ws.classList.add("hidden");dz.classList.remove("hidden");});
+    ws.panel.append(panelHeading("settings"),info,note,fLbl,fmtChips,el(`<div class="h-4"></div>`),qual,goB,zipB,rstB);
+
+    const grid=el(`<div class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>`);
+    ws.stage.appendChild(grid);
+
+    goB.addEventListener("click",async()=>{
+      grid.innerHTML=""; outputs=[];
+      const fmt=fmtChips.value(), mime=fmt==="jpg"?"image/jpeg":"image/png";
+      goB.disabled=true;
+      const prog=busy("loading decoder…"); ws.stage.appendChild(prog);
+      try{ await ensureLib(); }
+      catch(e){ prog.remove(); goB.disabled=false; return toast(e.message); }
+
+      let done=0;
+      for(const f of files){
+        prog.lastChild.textContent=` converting ${done+1}/${files.length}`;
+        try{
+          let result=await heic2any({blob:f,toType:mime,quality:fmt==="jpg"?qual.value():undefined});
+          const blob=Array.isArray(result)?result[0]:result;
+          const name=baseName(f.name)+"."+fmt;
+          outputs.push({blob,name});
+          const cell=el(`<div class="border p-2 ticked" style="border-color:var(--line-soft);background:var(--panel-2)">
+            <div class="checker mb-2"><img class="w-full block" alt=""></div>
+            <div class="mono text-[10px] truncate" style="color:var(--ink-faint)">${name}</div>
+            <div class="flex justify-between items-center gap-2 mt-1">
+              <span class="mono text-[10px]" style="color:var(--ink-dim)">${fmtBytes(f.size)} → ${fmtBytes(blob.size)}</span>
+              <button class="btn btn-sm">SAVE</button>
+            </div>
+          </div>`);
+          $("img",cell).src=URL.createObjectURL(blob);
+          $("button",cell).addEventListener("click",()=>download(blob,name));
+          grid.insertBefore(cell,prog);
+        }catch(e){ toast("Failed: "+f.name); }
+        done++;
+        await new Promise(r=>setTimeout(r));
+      }
+      prog.remove(); goB.disabled=false; zipB.disabled=outputs.length<2;
+      toast(outputs.length?`${outputs.length} converted.`:"Nothing converted.");
+    });
+
+    zipB.addEventListener("click",async()=>{
+      const zip=new JSZip(); outputs.forEach(o=>zip.file(o.name,o.blob));
+      download(await zip.generateAsync({type:"blob"}),"ezconv_heic.zip");
     });
 
     root.append(dz,ws);
